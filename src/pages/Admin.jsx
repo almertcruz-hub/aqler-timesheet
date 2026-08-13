@@ -99,18 +99,16 @@ function Admin({ session }) {
     setCancellingId(id)
     setReminderMessage('')
 
-    const { error: updateError } = await supabase
+    const { error: deleteError } = await supabase
       .from('email_reminders')
-      .update({ status: 'paused' })
+      .delete()
       .eq('id', id)
       .eq('status', 'active')
 
-    if (updateError) setReminderMessage(`Unable to cancel reminder: ${updateError.message}`)
+    if (deleteError) setReminderMessage(`Unable to cancel reminder: ${deleteError.message}`)
     else {
-      setReminders((current) => current.map((item) => (
-        item.id === id ? { ...item, status: 'paused' } : item
-      )))
-      setReminderMessage('Scheduled email cancelled.')
+      setReminders((current) => current.filter((item) => item.id !== id))
+      setReminderMessage('Scheduled email cancelled and removed.')
     }
 
     setCancellingId(null)
@@ -239,7 +237,7 @@ function Admin({ session }) {
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold">Scheduled emails</h2>
-                <p className="text-sm text-slate-500">Active and cancelled recurring reminders.</p>
+                <p className="text-sm text-slate-500">Active recurring reminders. Cancelled schedules are removed.</p>
               </div>
               <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">
                 {reminders.filter((item) => item.status === 'active').length} active
@@ -258,7 +256,7 @@ function Admin({ session }) {
                             ? 'bg-green-500/10 text-green-300'
                             : 'bg-slate-700 text-slate-300'
                         }`}>
-                          {item.status === 'active' ? 'Active' : item.status === 'paused' ? 'Cancelled' : item.status}
+                          {item.status === 'active' ? 'Active' : item.status}
                         </span>
                       </div>
                       <p className="mt-1 text-sm text-slate-300">
