@@ -44,6 +44,7 @@ function Admin({ session }) {
         supabase
           .from('email_reminders')
           .select('id, days_of_week, reminder_time, timezone, subject, message, status, sent_at, created_at, profiles(full_name, email)')
+          .eq('status', 'active')
           .order('created_at', { ascending: false }),
       ])
 
