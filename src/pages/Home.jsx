@@ -169,7 +169,11 @@ function Home({ session }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
-      <Navbar user={user} onSignOut={handleSignOut} />
+      <Navbar
+        user={user}
+        onSignOut={handleSignOut}
+        isAdmin={user.app_metadata?.role === 'admin'}
+      />
 
       <div className="p-8">
         <h1 className="text-4xl font-bold mb-6">

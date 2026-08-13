@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Admin from './pages/Admin'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -15,9 +16,11 @@ function App() {
       setLoading(false)
     })
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
     })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   if (loading) return (
@@ -30,6 +33,14 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={session ? <Home session={session} /> : <Navigate to="/login" />} />
+        <Route
+          path="/admin"
+          element={
+            session?.user?.app_metadata?.role === 'admin'
+              ? <Admin session={session} />
+              : <Navigate to="/" />
+          }
+        />
         <Route path="/login" element={!session ? <Login /> : <Navigate to="/" />} />
         <Route path="/register" element={!session ? <Register /> : <Navigate to="/" />} />
       </Routes>
