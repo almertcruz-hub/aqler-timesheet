@@ -20,6 +20,7 @@ function Admin({ session }) {
   const [employees, setEmployees] = useState([])
   const [reminders, setReminders] = useState([])
   const [savingReminder, setSavingReminder] = useState(false)
+  const [cancellingId, setCancellingId] = useState(null)
   const [reminderMessage, setReminderMessage] = useState('')
   const [reminder, setReminder] = useState({
     userId: '',
@@ -42,9 +43,8 @@ function Admin({ session }) {
         supabase.from('profiles').select('id, full_name, email').order('full_name'),
         supabase
           .from('email_reminders')
-          .select('id, days_of_week, reminder_time, timezone, subject, status, sent_at, profiles(full_name, email)')
-          .order('created_at', { ascending: false })
-          .limit(20),
+          .select('id, days_of_week, reminder_time, timezone, subject, message, status, sent_at, created_at, profiles(full_name, email)')
+          .order('created_at', { ascending: false }),
       ])
 
       const queryError = logsResult.error || profilesResult.error || remindersResult.error
@@ -83,7 +83,7 @@ function Admin({ session }) {
         message: reminder.message.trim(),
         created_by: session.user.id,
       })
-      .select('id, days_of_week, reminder_time, timezone, subject, status, sent_at, profiles(full_name, email)')
+      .select('id, days_of_week, reminder_time, timezone, subject, message, status, sent_at, created_at, profiles(full_name, email)')
       .single()
 
     if (insertError) setReminderMessage(`Unable to schedule reminder: ${insertError.message}`)
@@ -93,6 +93,27 @@ function Admin({ session }) {
       setReminder((current) => ({ ...current, userId: '' }))
     }
     setSavingReminder(false)
+  }
+
+  const cancelReminder = async (id) => {
+    setCancellingId(id)
+    setReminderMessage('')
+
+    const { error: updateError } = await supabase
+      .from('email_reminders')
+      .update({ status: 'paused' })
+      .eq('id', id)
+      .eq('status', 'active')
+
+    if (updateError) setReminderMessage(`Unable to cancel reminder: ${updateError.message}`)
+    else {
+      setReminders((current) => current.map((item) => (
+        item.id === id ? { ...item, status: 'paused' } : item
+      )))
+      setReminderMessage('Scheduled email cancelled.')
+    }
+
+    setCancellingId(null)
   }
 
   const filteredLogs = useMemo(() => {
@@ -214,22 +235,66 @@ function Admin({ session }) {
             </div>
           </form>
 
-          {reminders.length > 0 && (
-            <div className="mt-6 border-t border-slate-800 pt-5">
-              <h2 className="mb-3 font-semibold">Recent reminders</h2>
-              <div className="space-y-2">
-                {reminders.map((item) => (
-                  <div key={item.id} className="flex flex-col justify-between gap-1 rounded-lg bg-slate-900/70 px-4 py-3 text-sm md:flex-row">
-                    <span>{item.profiles?.full_name || item.profiles?.email} — {item.subject}</span>
-                    <span className="text-slate-400">
-                      {WEEKDAYS.filter((day) => item.days_of_week?.includes(day.value)).map((day) => day.short).join(' ')} at{' '}
-                      {String(item.reminder_time).slice(0, 5)} · {item.status}
-                    </span>
-                  </div>
-                ))}
+          <div className="mt-8 border-t border-slate-800 pt-6">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Scheduled emails</h2>
+                <p className="text-sm text-slate-500">Active and cancelled recurring reminders.</p>
               </div>
+              <span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">
+                {reminders.filter((item) => item.status === 'active').length} active
+              </span>
             </div>
-          )}
+
+            <div className="space-y-3">
+              {reminders.map((item) => (
+                <article key={item.id} className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold text-white">{item.subject}</h3>
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                          item.status === 'active'
+                            ? 'bg-green-500/10 text-green-300'
+                            : 'bg-slate-700 text-slate-300'
+                        }`}>
+                          {item.status === 'active' ? 'Active' : item.status === 'paused' ? 'Cancelled' : item.status}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-sm text-slate-300">
+                        {item.profiles?.full_name || 'Employee'} · {item.profiles?.email}
+                      </p>
+                      <p className="mt-3 whitespace-pre-wrap text-sm text-slate-400">{item.message}</p>
+                    </div>
+
+                    <div className="shrink-0 md:text-right">
+                      <p className="text-sm font-medium text-blue-300">
+                        {WEEKDAYS.filter((day) => item.days_of_week?.includes(day.value)).map((day) => day.short).join(' ')} at{' '}
+                        {String(item.reminder_time).slice(0, 5)}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">Asia/Manila</p>
+                      {item.status === 'active' && (
+                        <button
+                          type="button"
+                          disabled={cancellingId === item.id}
+                          onClick={() => cancelReminder(item.id)}
+                          className="mt-3 rounded-lg border border-red-500/30 px-3 py-1.5 text-xs font-semibold text-red-300 hover:bg-red-500/10 disabled:opacity-50"
+                        >
+                          {cancellingId === item.id ? 'Cancelling...' : 'Cancel schedule'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </article>
+              ))}
+
+              {reminders.length === 0 && (
+                <div className="rounded-xl border border-dashed border-slate-700 py-10 text-center text-sm text-slate-500">
+                  No scheduled emails yet.
+                </div>
+              )}
+            </div>
+          </div>
         </section>
 
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
