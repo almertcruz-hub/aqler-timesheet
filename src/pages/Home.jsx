@@ -175,8 +175,8 @@ function Home({ session }) {
         isAdmin={user.app_metadata?.role === 'admin'}
       />
 
-      <div className="p-8">
-        <h1 className="text-4xl font-bold mb-6">
+      <div className="px-4 py-6 md:p-8">
+        <h1 className="mb-4 text-2xl font-bold md:mb-6 md:text-4xl">
           Welcome back, {user.user_metadata?.full_name?.split(' ')[0]}!
         </h1>
 

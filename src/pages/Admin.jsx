@@ -181,7 +181,7 @@ function Admin({ session }) {
         isAdmin
       />
 
-      <main className="max-w-7xl mx-auto p-8">
+      <main className="mx-auto max-w-7xl p-4 md:p-8">
         <section className="mb-10 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-6">
           <div className="mb-5">
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-300">Email reminders</p>
@@ -339,7 +339,7 @@ function Admin({ session }) {
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
           <div>
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-300 mb-2">Admin</p>
-            <h1 className="text-4xl font-bold">Employee Work Logs</h1>
+            <h1 className="text-2xl font-bold md:text-4xl">Employee Work Logs</h1>
             <p className="text-slate-400 mt-2">View time-in and time-out activity across all employees.</p>
           </div>
 

@@ -14,7 +14,7 @@ function WorkLog({ logs }) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-6 pb-16">
+    <div className="mx-auto max-w-5xl px-4 pb-16 md:px-6">
       <h2 className="text-xl font-semibold mb-4 text-white">
         Work Log
       </h2>

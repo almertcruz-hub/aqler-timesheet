@@ -2,11 +2,11 @@ import { Link } from 'react-router-dom'
 
 function Navbar({ user, onSignOut, isAdmin = false }) {
   return (
-    <nav className="flex justify-between items-center px-8 py-5 bg-slate-900/60 backdrop-blur-md border-b border-slate-800">
-      <div className="text-3xl font-bold tracking-wide text-white">
+    <nav className="flex flex-col gap-4 border-b border-slate-800 bg-slate-900/60 px-4 py-4 backdrop-blur-md md:flex-row md:items-center md:justify-between md:px-8">
+      <div className="text-2xl font-bold tracking-wide text-white md:text-3xl">
         AQLER <span className="text-blue-300">Timesheet</span>
       </div>
-      <div className="flex items-center gap-6 text-sm text-slate-300">
+      <div className="flex w-full flex-wrap items-center gap-3 text-sm text-slate-300 md:w-auto md:justify-end md:gap-6">
         <Link to="/" className="hover:text-white transition">My Timesheet</Link>
         {isAdmin && (
           <Link to="/admin" className="text-blue-300 hover:text-blue-200 transition">
@@ -17,12 +17,12 @@ function Navbar({ user, onSignOut, isAdmin = false }) {
         <Link to="/work-history" className="hover:text-white transition">Work History</Link>
         <Link to="/payslips" className="hover:text-white transition">Payslips</Link> */}
 
-        <div className="ml-4 flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800 border border-slate-700">
+        <div className="flex min-w-0 items-center gap-2 rounded-full border border-slate-700 bg-slate-800 px-3 py-1">
           <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-sm font-bold">
             {user.email.charAt(0).toUpperCase()}
           </div>
           <div className="leading-tight">
-            <p className="text-sm font-medium">{user.email}</p>
+            <p className="max-w-40 truncate text-sm font-medium md:max-w-none">{user.email}</p>
             {isAdmin && <p className="text-xs text-blue-300">Administrator</p>}
           </div>
         </div>
