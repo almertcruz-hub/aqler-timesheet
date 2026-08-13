@@ -4,13 +4,8 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const resendApiKey = Deno.env.get('RESEND_API_KEY')!
 const resendFrom = Deno.env.get('RESEND_FROM') || 'onboarding@resend.dev'
-const cronSecret = Deno.env.get('CRON_SECRET')!
-
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 })
-  if (!cronSecret || request.headers.get('x-cron-secret') !== cronSecret) {
-    return new Response('Unauthorized', { status: 401 })
-  }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey)
   const { data: schedules, error } = await supabase
