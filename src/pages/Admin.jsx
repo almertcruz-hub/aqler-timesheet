@@ -2,6 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 
+const WEEKDAYS = [
+  { value: 1, short: 'M', label: 'Monday' },
+  { value: 2, short: 'T', label: 'Tuesday' },
+  { value: 3, short: 'W', label: 'Wednesday' },
+  { value: 4, short: 'T', label: 'Thursday' },
+  { value: 5, short: 'F', label: 'Friday' },
+  { value: 6, short: 'S', label: 'Saturday' },
+  { value: 0, short: 'S', label: 'Sunday' },
+]
+
 function Admin({ session }) {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -13,7 +23,8 @@ function Admin({ session }) {
   const [reminderMessage, setReminderMessage] = useState('')
   const [reminder, setReminder] = useState({
     userId: '',
-    scheduledAt: '',
+    daysOfWeek: [1, 2, 3, 4, 5],
+    reminderTime: '17:00',
     subject: 'Timesheet reminder',
     message: 'Please remember to update your timesheet.',
   })
@@ -31,8 +42,8 @@ function Admin({ session }) {
         supabase.from('profiles').select('id, full_name, email').order('full_name'),
         supabase
           .from('email_reminders')
-          .select('id, scheduled_at, subject, status, sent_at, profiles(full_name, email)')
-          .order('scheduled_at', { ascending: false })
+          .select('id, days_of_week, reminder_time, timezone, subject, status, sent_at, profiles(full_name, email)')
+          .order('created_at', { ascending: false })
           .limit(20),
       ])
 
@@ -54,7 +65,7 @@ function Admin({ session }) {
     event.preventDefault()
     setReminderMessage('')
 
-    if (!reminder.userId || !reminder.scheduledAt || !reminder.subject.trim() || !reminder.message.trim()) {
+    if (!reminder.userId || reminder.daysOfWeek.length === 0 || !reminder.reminderTime || !reminder.subject.trim() || !reminder.message.trim()) {
       setReminderMessage('Complete all reminder fields.')
       return
     }
@@ -64,19 +75,22 @@ function Admin({ session }) {
       .from('email_reminders')
       .insert({
         user_id: reminder.userId,
-        scheduled_at: new Date(reminder.scheduledAt).toISOString(),
+        days_of_week: reminder.daysOfWeek,
+        reminder_time: reminder.reminderTime,
+        timezone: 'Asia/Manila',
+        status: 'active',
         subject: reminder.subject.trim(),
         message: reminder.message.trim(),
         created_by: session.user.id,
       })
-      .select('id, scheduled_at, subject, status, sent_at, profiles(full_name, email)')
+      .select('id, days_of_week, reminder_time, timezone, subject, status, sent_at, profiles(full_name, email)')
       .single()
 
     if (insertError) setReminderMessage(`Unable to schedule reminder: ${insertError.message}`)
     else {
       setReminders((current) => [data, ...current])
       setReminderMessage('Email reminder scheduled successfully.')
-      setReminder((current) => ({ ...current, userId: '', scheduledAt: '' }))
+      setReminder((current) => ({ ...current, userId: '' }))
     }
     setSavingReminder(false)
   }
@@ -112,7 +126,7 @@ function Admin({ session }) {
           <div className="mb-5">
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-300">Email reminders</p>
             <h1 className="mt-1 text-2xl font-bold">Schedule an employee reminder</h1>
-            <p className="mt-1 text-sm text-slate-400">Times are entered in your current timezone and stored securely in UTC.</p>
+            <p className="mt-1 text-sm text-slate-400">Choose the weekdays and time. The schedule repeats weekly in Asia/Manila time.</p>
           </div>
 
           <form onSubmit={scheduleReminder} className="grid gap-4 md:grid-cols-2">
@@ -133,15 +147,42 @@ function Admin({ session }) {
             </label>
 
             <label className="text-sm text-slate-300">
-              Send date and time
+              Send time (Asia/Manila)
               <input
-                type="datetime-local"
-                value={reminder.scheduledAt}
-                min={new Date().toISOString().slice(0, 16)}
-                onChange={(event) => setReminder((current) => ({ ...current, scheduledAt: event.target.value }))}
+                type="time"
+                value={reminder.reminderTime}
+                onChange={(event) => setReminder((current) => ({ ...current, reminderTime: event.target.value }))}
                 className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-white"
               />
             </label>
+
+            <fieldset className="md:col-span-2">
+              <legend className="mb-2 text-sm text-slate-300">Repeat on</legend>
+              <div className="flex flex-wrap gap-2">
+                {WEEKDAYS.map((day) => {
+                  const selected = reminder.daysOfWeek.includes(day.value)
+                  return (
+                    <button
+                      key={day.label}
+                      type="button"
+                      title={day.label}
+                      aria-pressed={selected}
+                      onClick={() => setReminder((current) => ({
+                        ...current,
+                        daysOfWeek: selected
+                          ? current.daysOfWeek.filter((value) => value !== day.value)
+                          : [...current.daysOfWeek, day.value],
+                      }))}
+                      className={`h-10 w-10 rounded-full text-sm font-semibold transition ${
+                        selected ? 'bg-blue-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                      }`}
+                    >
+                      {day.short}
+                    </button>
+                  )
+                })}
+              </div>
+            </fieldset>
 
             <label className="text-sm text-slate-300 md:col-span-2">
               Subject
@@ -181,7 +222,8 @@ function Admin({ session }) {
                   <div key={item.id} className="flex flex-col justify-between gap-1 rounded-lg bg-slate-900/70 px-4 py-3 text-sm md:flex-row">
                     <span>{item.profiles?.full_name || item.profiles?.email} — {item.subject}</span>
                     <span className="text-slate-400">
-                      {new Date(item.scheduled_at).toLocaleString()} · {item.status}
+                      {WEEKDAYS.filter((day) => item.days_of_week?.includes(day.value)).map((day) => day.short).join(' ')} at{' '}
+                      {String(item.reminder_time).slice(0, 5)} · {item.status}
                     </span>
                   </div>
                 ))}

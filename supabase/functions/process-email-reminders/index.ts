@@ -13,23 +13,36 @@ Deno.serve(async (request) => {
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey)
-  const { data: due, error } = await supabase
+  const { data: schedules, error } = await supabase
     .from('email_reminders')
-    .select('id, subject, message, profiles(email, full_name)')
-    .eq('status', 'pending')
-    .lte('scheduled_at', new Date().toISOString())
-    .order('scheduled_at')
+    .select('id, subject, message, days_of_week, reminder_time, timezone, last_sent_on, profiles(email, full_name)')
+    .eq('status', 'active')
     .limit(50)
 
   if (error) return Response.json({ error: error.message }, { status: 500 })
 
   const results = []
-  for (const reminder of due || []) {
+  for (const reminder of schedules || []) {
+    const timezone = reminder.timezone || 'Asia/Manila'
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      weekday: 'short', year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+    }).formatToParts(new Date())
+    const value = (type: string) => parts.find((part) => part.type === type)?.value || ''
+    const weekday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(value('weekday'))
+    const localDate = `${value('year')}-${value('month')}-${value('day')}`
+    const localTime = `${value('hour')}:${value('minute')}`
+    const scheduledTime = String(reminder.reminder_time).slice(0, 5)
+
+    if (!reminder.days_of_week?.includes(weekday) || localTime < scheduledTime || reminder.last_sent_on === localDate) continue
+
     const { data: claimed } = await supabase
       .from('email_reminders')
-      .update({ status: 'processing' })
+      .update({ last_sent_on: localDate })
       .eq('id', reminder.id)
-      .eq('status', 'pending')
+      .eq('status', 'active')
+      .or(`last_sent_on.is.null,last_sent_on.neq.${localDate}`)
       .select('id')
       .maybeSingle()
 
@@ -48,11 +61,11 @@ Deno.serve(async (request) => {
     })
 
     if (response.ok) {
-      await supabase.from('email_reminders').update({ status: 'sent', sent_at: new Date().toISOString(), error: null }).eq('id', reminder.id)
+      await supabase.from('email_reminders').update({ sent_at: new Date().toISOString(), error: null }).eq('id', reminder.id)
       results.push({ id: reminder.id, status: 'sent' })
     } else {
       const detail = await response.text()
-      await supabase.from('email_reminders').update({ status: 'failed', error: detail.slice(0, 1000) }).eq('id', reminder.id)
+      await supabase.from('email_reminders').update({ error: detail.slice(0, 1000), last_sent_on: null }).eq('id', reminder.id)
       results.push({ id: reminder.id, status: 'failed' })
     }
   }
