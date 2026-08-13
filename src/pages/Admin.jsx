@@ -133,6 +133,46 @@ function Admin({ session }) {
     return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
   }
 
+  const exportLogs = () => {
+    const escapeCsv = (value) => {
+      const text = String(value ?? '')
+      return `"${text.replaceAll('"', '""')}"`
+    }
+
+    const rows = filteredLogs.map((log) => [
+      log.profiles?.full_name || 'Employee',
+      log.profiles?.email || '',
+      log.type === 'IN' ? 'Time In' : 'Time Out',
+      log.date,
+      log.time,
+      formatDuration(log.duration)
+    ])
+
+    const csv = [
+      ["Employee", "Email", "Activity", "Date", "Time", "Duration"],
+      ...rows,
+    ].map((row) => row.map(escapeCsv).join(','))
+    .join('\r\n')
+
+    const blob = new Blob([`\uFEFF${csv}`], {
+      type: 'text/csv;charset=utf-8',
+    })
+
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+
+    link.href = url
+    link.download = `aqler-work-logs-${new Date()
+      .toISOString()
+      .slice(0, 10)}.csv`
+
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    URL.revokeObjectURL(url)
+  }
+
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       <Navbar
@@ -303,13 +343,24 @@ function Admin({ session }) {
             <p className="text-slate-400 mt-2">View time-in and time-out activity across all employees.</p>
           </div>
 
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search employee, email, or date"
-            className="w-full md:w-80 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
-          />
+          <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
+            <button
+              type="button"
+              onClick={exportLogs}
+              disabled={filteredLogs.length === 0}
+              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Export CSV
+            </button>
+
+            <input
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search employee, email, or date"
+              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none sm:w-80"
+            />
+          </div>
         </div>
 
         {error && (
