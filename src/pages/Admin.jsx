@@ -7,25 +7,79 @@ function Admin({ session }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+  const [employees, setEmployees] = useState([])
+  const [reminders, setReminders] = useState([])
+  const [savingReminder, setSavingReminder] = useState(false)
+  const [reminderMessage, setReminderMessage] = useState('')
+  const [reminder, setReminder] = useState({
+    userId: '',
+    scheduledAt: '',
+    subject: 'Timesheet reminder',
+    message: 'Please remember to update your timesheet.',
+  })
 
   useEffect(() => {
     const fetchLogs = async () => {
       setLoading(true)
       setError('')
 
-      const { data, error: queryError } = await supabase
-        .from('logs')
-        .select('id, type, time, date, duration, created_at, user_id, profiles(full_name, email)')
-        .order('created_at', { ascending: false })
+      const [logsResult, profilesResult, remindersResult] = await Promise.all([
+        supabase
+          .from('logs')
+          .select('id, type, time, date, duration, created_at, user_id, profiles(full_name, email)')
+          .order('created_at', { ascending: false }),
+        supabase.from('profiles').select('id, full_name, email').order('full_name'),
+        supabase
+          .from('email_reminders')
+          .select('id, scheduled_at, subject, status, sent_at, profiles(full_name, email)')
+          .order('scheduled_at', { ascending: false })
+          .limit(20),
+      ])
 
+      const queryError = logsResult.error || profilesResult.error || remindersResult.error
       if (queryError) setError(queryError.message)
-      else setLogs(data || [])
+      else {
+        setLogs(logsResult.data || [])
+        setEmployees(profilesResult.data || [])
+        setReminders(remindersResult.data || [])
+      }
 
       setLoading(false)
     }
 
     fetchLogs()
   }, [])
+
+  const scheduleReminder = async (event) => {
+    event.preventDefault()
+    setReminderMessage('')
+
+    if (!reminder.userId || !reminder.scheduledAt || !reminder.subject.trim() || !reminder.message.trim()) {
+      setReminderMessage('Complete all reminder fields.')
+      return
+    }
+
+    setSavingReminder(true)
+    const { data, error: insertError } = await supabase
+      .from('email_reminders')
+      .insert({
+        user_id: reminder.userId,
+        scheduled_at: new Date(reminder.scheduledAt).toISOString(),
+        subject: reminder.subject.trim(),
+        message: reminder.message.trim(),
+        created_by: session.user.id,
+      })
+      .select('id, scheduled_at, subject, status, sent_at, profiles(full_name, email)')
+      .single()
+
+    if (insertError) setReminderMessage(`Unable to schedule reminder: ${insertError.message}`)
+    else {
+      setReminders((current) => [data, ...current])
+      setReminderMessage('Email reminder scheduled successfully.')
+      setReminder((current) => ({ ...current, userId: '', scheduledAt: '' }))
+    }
+    setSavingReminder(false)
+  }
 
   const filteredLogs = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -54,6 +108,88 @@ function Admin({ session }) {
       />
 
       <main className="max-w-7xl mx-auto p-8">
+        <section className="mb-10 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-6">
+          <div className="mb-5">
+            <p className="text-sm font-semibold uppercase tracking-widest text-blue-300">Email reminders</p>
+            <h1 className="mt-1 text-2xl font-bold">Schedule an employee reminder</h1>
+            <p className="mt-1 text-sm text-slate-400">Times are entered in your current timezone and stored securely in UTC.</p>
+          </div>
+
+          <form onSubmit={scheduleReminder} className="grid gap-4 md:grid-cols-2">
+            <label className="text-sm text-slate-300">
+              Employee
+              <select
+                value={reminder.userId}
+                onChange={(event) => setReminder((current) => ({ ...current, userId: event.target.value }))}
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-white"
+              >
+                <option value="">Select an employee</option>
+                {employees.map((employee) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.full_name || employee.email} ({employee.email})
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="text-sm text-slate-300">
+              Send date and time
+              <input
+                type="datetime-local"
+                value={reminder.scheduledAt}
+                min={new Date().toISOString().slice(0, 16)}
+                onChange={(event) => setReminder((current) => ({ ...current, scheduledAt: event.target.value }))}
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-white"
+              />
+            </label>
+
+            <label className="text-sm text-slate-300 md:col-span-2">
+              Subject
+              <input
+                value={reminder.subject}
+                onChange={(event) => setReminder((current) => ({ ...current, subject: event.target.value }))}
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-white"
+              />
+            </label>
+
+            <label className="text-sm text-slate-300 md:col-span-2">
+              Message
+              <textarea
+                value={reminder.message}
+                onChange={(event) => setReminder((current) => ({ ...current, message: event.target.value }))}
+                rows="3"
+                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-white"
+              />
+            </label>
+
+            <div className="flex items-center gap-4 md:col-span-2">
+              <button
+                disabled={savingReminder}
+                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold hover:bg-blue-500 disabled:opacity-50"
+              >
+                {savingReminder ? 'Scheduling...' : 'Schedule email'}
+              </button>
+              {reminderMessage && <p className="text-sm text-slate-300">{reminderMessage}</p>}
+            </div>
+          </form>
+
+          {reminders.length > 0 && (
+            <div className="mt-6 border-t border-slate-800 pt-5">
+              <h2 className="mb-3 font-semibold">Recent reminders</h2>
+              <div className="space-y-2">
+                {reminders.map((item) => (
+                  <div key={item.id} className="flex flex-col justify-between gap-1 rounded-lg bg-slate-900/70 px-4 py-3 text-sm md:flex-row">
+                    <span>{item.profiles?.full_name || item.profiles?.email} — {item.subject}</span>
+                    <span className="text-slate-400">
+                      {new Date(item.scheduled_at).toLocaleString()} · {item.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
           <div>
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-300 mb-2">Admin</p>
