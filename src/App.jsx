@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Admin from './pages/Admin'
+import Shift from './pages/Shift'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -43,6 +44,14 @@ function App() {
         />
         <Route path="/login" element={!session ? <Login /> : <Navigate to="/" />} />
         <Route path="/register" element={!session ? <Register /> : <Navigate to="/" />} />
+        <Route
+          path="/shifts"
+          element={
+            session
+              ? <Shift session={session} />
+              : <Navigate to="/login" />
+          }
+        />
       </Routes>
     </BrowserRouter>
   )

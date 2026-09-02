@@ -1,18 +1,55 @@
-# React + Vite
+# AQLER Timesheet
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AQLER Timesheet is an employee timekeeping application built with React, Vite,
+Tailwind CSS, and Supabase.
 
-Currently, two official plugins are available:
+Employees can record time-in and time-out activity. Administrators can review
+employee logs, manage scheduled email reminders, and export records. A shift
+management module is also planned.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Development
 
-## React Compiler
+```bash
+npm install
+npm run dev
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Useful checks:
 
-## Expanding the ESLint configuration
+```bash
+npm run lint
+npm run build
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-"# aqler-timesheet" 
-"# aqler-timesheet-app" 
+After changing application source files, refresh the exact-code documentation snapshot:
+
+```bash
+node docs/generate-source-guide.mjs
+```
+
+## Documentation
+
+- [Interactive HTML learning guide](./docs/index.html) is the recommended starting
+  point. It provides responsive course navigation, expandable explanations, and
+  copyable code examples similar to the DaiDai documentation.
+- [Beginner Code Guide source](./docs/BEGINNER_CODE_GUIDE.md) contains the
+  text-first Markdown version.
+- [Shift Module Guide source](./docs/modules/SHIFT_MODULE.md) contains the planned
+  shift feature's SQL, RLS policies, React code, and tests in Markdown.
+
+## Main folders
+
+```text
+src/
+  components/     Reusable interface pieces
+  pages/          Full application pages
+  lib/            Shared services such as the Supabase client
+  App.jsx         Routes and top-level application flow
+docs/             Learning and feature documentation
+```
+
+## Security reminder
+
+The browser should only receive the Supabase publishable or anonymous key.
+Never put a Supabase service-role key or an email provider secret in React
+source code or in a Vite environment variable exposed to the browser.

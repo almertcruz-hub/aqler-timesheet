@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 
@@ -12,11 +12,21 @@ const WEEKDAYS = [
   { value: 0, short: 'S', label: 'Sunday' },
 ]
 
+const PAGE_SIZE = 20
+const EXPORT_BATCH_SIZE = 1000
+
 function Admin({ session }) {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [search, setSearch] = useState('')
+
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const [totalLogs, setTotalLogs] = useState(0)
+  const [refreshNumber, setRefreshNumber] = useState(0)
+  const [exporting, setExporting] = useState(false)
+
   const [employees, setEmployees] = useState([])
   const [reminders, setReminders] = useState([])
   const [savingReminder, setSavingReminder] = useState(false)
@@ -31,36 +41,103 @@ function Admin({ session }) {
   })
 
   useEffect(() => {
-    const fetchLogs = async () => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim())
+      setPage(1)
+    }, 400)
+
+    return () => {
+      clearTimeout(timer)
+    }
+  }, [search])
+
+  useEffect(() => {
+    async function fetchAdminSetup() {
+      const [profilesResult, remindersResult] = await Promise.all([
+        supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .order('full_name'),
+
+        supabase
+          .from('email_reminders')
+          .select(`
+            id,
+            days_of_week,
+            reminder_time,
+            timezone,
+            subject,
+            message,
+            status,
+            sent_at,
+            created_at, 
+            profiles(full_name, email)
+          `)
+          .eq('status', 'active')
+          .order('created_at', {ascending: false}),
+      ])
+
+      const setupError = profilesResult.error || remindersResult.error
+
+      if (setupError) {
+        setReminderMessage(
+          `Unable to load admin data: ${setupError.message}`
+        )
+        return
+      }
+
+      setEmployees(profilesResult.data || [])
+      setReminders(remindersResult.data || [])
+    }
+    
+    fetchAdminSetup()
+  }, [])
+
+  useEffect(() => {
+    let ignoreResult = false
+
+    async function fetchLogs() {
       setLoading(true)
       setError('')
 
-      const [logsResult, profilesResult, remindersResult] = await Promise.all([
-        supabase
-          .from('logs')
-          .select('id, type, time, date, duration, created_at, user_id, profiles(full_name, email)')
-          .order('created_at', { ascending: false }),
-        supabase.from('profiles').select('id, full_name, email').order('full_name'),
-        supabase
-          .from('email_reminders')
-          .select('id, days_of_week, reminder_time, timezone, subject, message, status, sent_at, created_at, profiles(full_name, email)')
-          .eq('status', 'active')
-          .order('created_at', { ascending: false }),
-      ])
+      const from = (page - 1) * PAGE_SIZE
+      const to = from + PAGE_SIZE - 1
 
-      const queryError = logsResult.error || profilesResult.error || remindersResult.error
-      if (queryError) setError(queryError.message)
-      else {
-        setLogs(logsResult.data || [])
-        setEmployees(profilesResult.data || [])
-        setReminders(remindersResult.data || [])
+      let query = supabase
+        .from('admin_work_logs')
+        .select(
+          'id, user_id, shift_date, time_in, time_out, created_at, full_name, email',
+          { count: 'exact' }
+        )
+        .order('time_in', { ascending: false })
+        .range(from, to)
+
+      if (debouncedSearch) {
+        query = query.ilike('search_text', `%${debouncedSearch}%`)
+      }
+
+      const { data, count, error: logsError } = await query
+
+      if (ignoreResult) return
+
+      if (logsError) {
+        setError(logsError.message)
+        setLogs([])
+        setTotalLogs(0)
+      } else {
+        setLogs(data || [])
+        setTotalLogs(count || 0)
       }
 
       setLoading(false)
     }
 
     fetchLogs()
-  }, [])
+
+    return () => {
+      ignoreResult = true
+    }
+  }, [page, debouncedSearch, refreshNumber])
 
   const scheduleReminder = async (event) => {
     event.preventDefault()
@@ -115,61 +192,118 @@ function Admin({ session }) {
     setCancellingId(null)
   }
 
-  const filteredLogs = useMemo(() => {
-    const term = search.trim().toLowerCase()
-    if (!term) return logs
+  const totalPages = Math.max(1, Math.ceil(totalLogs / PAGE_SIZE))
 
-    return logs.filter((log) => {
-      const employee = log.profiles
-      return [employee?.full_name, employee?.email, log.type, log.date]
-        .filter(Boolean)
-        .some((value) => value.toLowerCase().includes(term))
-    })
-  }, [logs, search])
+  const formatDate = (dateString) => {
+    if (!dateString) return '—'
 
-  const formatDuration = (duration) => {
-    if (duration == null) return '—'
-    const minutes = Math.round(Number(duration) * 60)
-    return `${Math.floor(minutes / 60)}h ${minutes % 60}m`
+    return new Intl.DateTimeFormat('en-PH', {
+      timeZone: 'Asia/Manila',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }).format(new Date(`${dateString}T12:00:00+08:00`))
   }
 
-  const exportLogs = () => {
-    const escapeCsv = (value) => {
-      const text = String(value ?? '')
-      return `"${text.replaceAll('"', '""')}"`
+  const formatTime = (timestamp) => {
+    if (!timestamp) return '—'
+
+    return new Intl.DateTimeFormat('en-PH', {
+      timeZone: 'Asia/Manila',
+      hour: 'numeric',
+      minute: '2-digit',
+    }).format(new Date(timestamp))
+  }
+
+  const formatDuration = (log) => {
+    if (!log.time_out) return 'In progress'
+
+    const start = new Date(log.time_in)
+    const end = new Date(log.time_out)
+    const totalMinutes = Math.max(
+      0,
+      Math.round((end - start) / (1000 * 60))
+    )
+    const hours = Math.floor(totalMinutes / 60)
+    const minutes = totalMinutes % 60
+
+    return `${hours}h ${String(minutes).padStart(2, '0')}m`
+  }
+
+  const exportLogs = async () => {
+    setExporting(true)
+    setError('')
+
+    try {
+      const exportedLogs = []
+      let from = 0
+
+      while (true) {
+        const to = from + EXPORT_BATCH_SIZE - 1
+        let query = supabase
+          .from('admin_work_logs')
+          .select('id, user_id, shift_date, time_in, time_out, full_name, email')
+          .order('time_in', { ascending: false })
+          .range(from, to)
+
+        const exportSearch = search.trim()
+
+        if (exportSearch) {
+          query = query.ilike('search_text', `%${exportSearch}%`)
+        }
+
+        const { data, error: exportError } = await query
+
+        if (exportError) throw exportError
+
+        const batch = data || []
+        exportedLogs.push(...batch)
+
+        if (batch.length < EXPORT_BATCH_SIZE) break
+
+        from += EXPORT_BATCH_SIZE
+      }
+
+      const escapeCsv = (value) => {
+        const text = String(value ?? '')
+        return `"${text.replaceAll('"', '""')}"`
+      }
+
+      const rows = exportedLogs.map((log) => [
+        log.full_name || 'Employee',
+        log.email || '',
+        log.shift_date || '',
+        formatTime(log.time_in),
+        log.time_out ? formatTime(log.time_out) : '',
+        formatDuration(log),
+        log.time_out ? 'Completed' : 'In progress',
+      ])
+
+      const csv = [
+        ['Employee', 'Email', 'Shift Date', 'Time In', 'Time Out', 'Duration', 'Status'],
+        ...rows,
+      ]
+        .map((row) => row.map(escapeCsv).join(','))
+        .join('\r\n')
+
+      const blob = new Blob([`\uFEFF${csv}`], {
+        type: 'text/csv;charset=utf-8',
+      })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+
+      link.href = url
+      link.download = `aqler-work-logs-${new Date().toISOString().slice(0, 10)}.csv`
+
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } catch (exportError) {
+      setError(`Unable to export employee logs: ${exportError.message}`)
+    } finally {
+      setExporting(false)
     }
-
-    const rows = filteredLogs.map((log) => [
-      log.profiles?.full_name || 'Employee',
-      log.profiles?.email || '',
-      log.type === 'IN' ? 'Time In' : 'Time Out',
-      log.date,
-      log.time,
-      formatDuration(log.duration)
-    ])
-
-    const csv = [
-      ["Employee", "Email", "Activity", "Date", "Time", "Duration"],
-      ...rows,
-    ].map((row) => row.map(escapeCsv).join(','))
-    .join('\r\n')
-
-    const blob = new Blob([`\uFEFF${csv}`], {
-      type: 'text/csv;charset=utf-8',
-    })
-
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-
-    link.href = url
-    link.download = `aqler-work-logs-${new Date()
-      .toISOString()
-      .slice(0, 10)}.csv`
-
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    URL.revokeObjectURL(url)
   }
 
 
@@ -346,11 +480,22 @@ function Admin({ session }) {
           <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
             <button
               type="button"
+              onClick={() => {
+                setPage(1)
+                setRefreshNumber((current) => current + 1)
+              }}
+              className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-slate-800"
+            >
+              Refresh
+            </button>
+
+            <button
+              type="button"
               onClick={exportLogs}
-              disabled={filteredLogs.length === 0}
+              disabled={totalLogs === 0 || exporting}
               className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Export CSV
+              {exporting ? 'Exporting...' : 'Export CSV'}
             </button>
 
             <input
@@ -371,45 +516,104 @@ function Admin({ session }) {
 
         <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full min-w-[850px] text-left text-sm">
               <thead className="border-b border-slate-800 bg-slate-950/50 text-slate-400">
                 <tr>
                   <th className="px-5 py-4 font-medium">Employee</th>
-                  <th className="px-5 py-4 font-medium">Activity</th>
-                  <th className="px-5 py-4 font-medium">Date</th>
-                  <th className="px-5 py-4 font-medium">Time</th>
+                  <th className="px-5 py-4 font-medium">Shift date</th>
+                  <th className="px-5 py-4 font-medium">Time in</th>
+                  <th className="px-5 py-4 font-medium">Time out</th>
                   <th className="px-5 py-4 font-medium">Duration</th>
+                  <th className="px-5 py-4 font-medium">Status</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-slate-800">
-                {filteredLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-800/40">
-                    <td className="px-5 py-4">
-                      <p className="font-medium text-white">{log.profiles?.full_name || 'Employee'}</p>
-                      <p className="text-xs text-slate-500">{log.profiles?.email || log.user_id}</p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
-                        log.type === 'IN'
-                          ? 'bg-teal-500/10 text-teal-300'
-                          : 'bg-amber-500/10 text-amber-300'
-                      }`}>
-                        Time {log.type === 'IN' ? 'In' : 'Out'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-slate-300">{log.date}</td>
-                    <td className="px-5 py-4 text-slate-300">{log.time}</td>
-                    <td className="px-5 py-4 font-medium text-slate-200">{formatDuration(log.duration)}</td>
-                  </tr>
-                ))}
+                {logs.map((log) => {
+                  const isActive = !log.time_out
+
+                  return (
+                    <tr key={log.id} className="hover:bg-slate-800/40">
+                      <td className="px-5 py-4">
+                        <p className="font-medium text-white">
+                          {log.full_name || 'Employee'}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {log.email || log.user_id}
+                        </p>
+                      </td>
+
+                      <td className="px-5 py-4 text-slate-300">
+                        {formatDate(log.shift_date)}
+                      </td>
+
+                      <td className="px-5 py-4 text-slate-300">
+                        {formatTime(log.time_in)}
+                      </td>
+
+                      <td className="px-5 py-4 text-slate-300">
+                        {isActive ? 'Still working' : formatTime(log.time_out)}
+                      </td>
+
+                      <td className="px-5 py-4 font-medium text-slate-200">
+                        {formatDuration(log)}
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
+                          isActive
+                            ? 'bg-amber-500/10 text-amber-300'
+                            : 'bg-green-500/10 text-green-300'
+                        }`}>
+                          {isActive ? 'In progress' : 'Completed'}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
 
-          {!loading && filteredLogs.length === 0 && (
-            <div className="px-6 py-12 text-center text-slate-500">No employee logs found.</div>
+          {loading && (
+            <div className="px-6 py-12 text-center text-slate-400">
+              Loading employee logs...
+            </div>
           )}
-          {loading && <div className="px-6 py-12 text-center text-slate-400">Loading employee logs...</div>}
+
+          {!loading && logs.length === 0 && (
+            <div className="px-6 py-12 text-center text-slate-500">
+              No employee logs found.
+            </div>
+          )}
+
+          {!loading && totalLogs > 0 && (
+            <div className="flex flex-col gap-3 border-t border-slate-800 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-slate-400">
+                Page {page} of {totalPages} · {totalLogs} sessions
+              </p>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPage((current) => Math.max(1, current - 1))}
+                  disabled={page === 1}
+                  className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Previous
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                  disabled={page >= totalPages}
+                  className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>

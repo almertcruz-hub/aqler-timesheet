@@ -5,12 +5,30 @@ function WorkLog({ logs }) {
 
   const visibleLogs = logs.slice(0, limit)
 
-  const formatDuration = (duration) => {
-    const totalMinutes = Math.round(duration * 60)
+  const formatTime = (timestamp) => {
+    if (!timestamp) return 'Still working'
+
+    return new Intl.DateTimeFormat('en-PH', {
+      timeZone: 'Asia/Manila',
+      hour: 'numeric',
+      minute: '2-digit'
+    }).format(new Date(timestamp))
+  }
+
+  const formatDuration = (log) => {
+    if (!log.time_out) return 'In progress'
+
+    const timeIn = new Date(log.time_in)
+    const timeOut = new Date(log.time_out)
+
+    const totalMinutes = Math.round(
+      (timeOut - timeIn) / (1000 * 60)
+    )
+
     const hours = Math.floor(totalMinutes / 60)
     const minutes = totalMinutes % 60
 
-    return `${hours > 0 ? `${hours}h ` : ""}${minutes}m`
+    return `${hours}h ${minutes}m`
   }
 
   return (
@@ -20,60 +38,67 @@ function WorkLog({ logs }) {
       </h2>
 
       <div className="space-y-3">
-        {visibleLogs.map((log, index) => {
-
-          const duration = parseFloat(log.duration) || 0
-          const totalMinutes = Math.round(duration * 60)
-          const isIncomplete = log.type === "OUT" && totalMinutes < 9 * 60
+        {visibleLogs.map((log) => {
+          const isActive = log.time_out === null
 
           return (
-            <div
-              key={`${log.date}-${log.time}-${index}`}
-              className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex justify-between items-center"
+            <article
+              key={log.id}
+              className="rounded-xl border border-slate-800 bg-slate-900 p-4"
             >
-              {/* LEFT SIDE */}
-              <div>
-                <p className="font-medium text-slate-100">
-                  {log.type === "IN"
-                    ? "Time In"
-                    : log.type === "OUT"
-                    ? "Time Out"
-                    : "Unknown"}
-                </p>
-
-                <p className="text-sm text-slate-400">
-                  {log.date} • {log.time}
-                </p>
-              </div>
-
-              {/* RIGHT SIDE */}
-              {log.duration != null && (
-                <div className="text-right">
-                  <p
-                    className={`text-2xl md:text-3xl font-bold tracking-tight ${
-                      isIncomplete
-                        ? "text-red-400"
-                        : "text-green-400"
-                    }`}
-                  >
-                    {formatDuration(duration)}
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium text-slate-100">
+                    Shift date: {log.shift_date}
                   </p>
-                  <p className="text-xs text-slate-500 font-medium">
-                    {isIncomplete ? "Incomplete" : "Complete"}
+
+                  <p className="mt-1 text-sm text-slate-400">
+                    Time In: {formatTime(log.time_in)}
+                  </p>
+
+                  <p className="text-sm text-slate-400">
+                    Time Out: {formatTime(log.time_out)}
                   </p>
                 </div>
-              )}
-            </div>
+
+                <div className="sm:text-right">
+                  <p
+                    className={`text-2xl font-bold ${
+                      isActive
+                      ? 'text-amber-300'
+                      : 'text-green-400'
+                    }`}
+                    >
+                      {formatDuration(log)}
+                    </p>
+
+                    <p className="text-medium font-medium text-slate-500">
+                      {isActive ? 'Active': 'Completed'}
+                    </p>
+                </div>
+              </div>
+            </article>
           )
-        })}
+        })
+      }
+
+      {visibleLogs.length === 0 && (
+        <div className="rounded-xl border border-dashed border-slate-700 py-10 text-center text-slate-300">
+          <div className="mb-3 text-5xl">😴</div>
+
+          <p className="font-medium text-slate-600 transition hover:text-white">
+            No recorded work sessions yet.
+          </p>
+        </div>
+      )}
       </div>
 
-      {/* PAGINATION */}
-      <div className="flex justify-center mt-6 gap-4">
+      <div className="mt-6 flex justify-center gap-4">
         {limit < logs.length && (
           <button
-            onClick={() => setLimit((x) => x + 10)}
-            className="text-sm text-slate-400 hover:text-white transition"
+            type="button"
+            onClick={() => setLimit((current) => current + 10)}
+            className="text-sm text-slate-400"
           >
             Show more ({logs.length - limit} remaining)
           </button>
@@ -81,8 +106,9 @@ function WorkLog({ logs }) {
 
         {limit > 10 && (
           <button
+            type="button"
             onClick={() => setLimit(10)}
-            className="text-sm text-slate-400 hover:text-red-400 transition"
+            className="text-sm text-slate-400 transition hover:text-red-400"
           >
             Show less
           </button>

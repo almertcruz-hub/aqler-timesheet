@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Exact module-by-module walkthrough of AQLER Timesheet">
+    <title>AQLER Timesheet exact code walkthrough</title>
+    <link rel="stylesheet" href="assets/guide.css">
+    <script src="assets/source-guide-data.js" defer></script>
+    <script src="assets/guide.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#course-navigation">Skip to guide navigation</a>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">AQLER Timesheet exact code walkthrough</p>
+        <h1>Understand every module in the current app</h1>
+        <p class="hero-summary">Learn the app one module at a time, from purpose to exact code to execution flow.</p>
+        <details class="guide-intro">
+          <summary>About this guide and your learning progress</summary>
+          <p>
+            Read each module at three levels: start with its overall purpose, inspect
+            the important code chunks, and finish by tracing the logic in execution order.
+          </p>
+          <div class="course-path" aria-label="Six reading levels">
+            <button class="course-step current" type="button" data-global-view="overall" aria-pressed="true"><strong>1. Overall</strong><span>What the module owns, receives, and produces.</span></button>
+            <button class="course-step" type="button" data-global-view="functions" aria-pressed="false"><strong>2. Whole functions</strong><span>Understand each complete job as one story before reading its lines.</span></button>
+            <button class="course-step" type="button" data-global-view="flow" aria-pressed="false"><strong>3. Guided code flow</strong><span>Important related code in working order, with syntax and its visible website effect together.</span></button>
+            <button class="course-step" type="button" data-global-view="ui" aria-pressed="false"><strong>4. UI, JSX &amp; CSS</strong><span>Screen pictures connected to the exact elements, dynamic expressions, and responsive styling.</span></button>
+            <button class="course-step" type="button" data-global-view="code" aria-pressed="false"><strong>5. Code chunks</strong><span>Complete current source code with focused line-level explanations.</span></button>
+            <button class="course-step" type="button" data-global-view="logic" aria-pressed="false"><strong>6. Logical explanation</strong><span>The exact order in which the module works.</span></button>
+          </div>
+          <div class="self-contained-banner">
+            <strong>Everything needed for learning is embedded here.</strong>
+            You do not need to open the repository while studying. The guide contains
+            the project map, data shapes, complete readable source files, notebook-style
+            whole-function stories, code-and-explanation cells, plain-language beginner boxes,
+            input/output examples, module contracts, execution flows, terminology, and common mistakes.
+          </div>
+          <div class="source-freshness" data-source-freshness>
+            Checking whether the embedded source guide is current…
+          </div>
+          <div class="progress-card" aria-label="Course progress">
+            <header>
+              <strong>Your learning progress</strong>
+              <span data-progress-label>0 of 11 modules understood</span>
+            </header>
+            <div class="progress-track" role="progressbar" aria-label="Modules understood" aria-valuemin="0" aria-valuemax="11" aria-valuenow="0">
+              <div class="progress-fill" data-progress-fill></div>
+            </div>
+            <button class="button" type="button" data-reset-progress>Reset progress</button>
+          </div>
+        </details>
+      </header>
+
+      <div class="course-navigator" id="course-navigation" data-course-navigator>
+        <nav class="guide-mode-tabs" aria-label="Guide sections">
+          <button type="button" data-guide-mode="overview" aria-pressed="false">Overview &amp; foundations</button>
+          <button type="button" data-guide-mode="syntax" aria-pressed="false">Syntax handbook</button>
+          <button type="button" data-guide-mode="modules" aria-pressed="true">Application modules</button>
+        </nav>
+        <div class="bookmark-center">
+          <button type="button" class="bookmark-toggle" data-bookmark-toggle aria-expanded="false">
+            ★ Bookmarked cells <span data-bookmark-count>0</span>
+          </button>
+          <aside class="bookmark-drawer" data-bookmark-drawer hidden>
+            <header><div><strong>Your saved places</strong><p>Bookmarks stay in this browser.</p></div><button type="button" data-close-bookmarks aria-label="Close bookmarks">×</button></header>
+            <div data-bookmark-list></div>
+            <button class="button clear-bookmarks" type="button" data-clear-bookmarks>Remove all bookmarks</button>
+          </aside>
+        </div>
+        <button type="button" class="guide-assistant-toggle" data-guide-assistant-toggle aria-expanded="false">
+          ? Ask the guide
+        </button>
+        <div class="module-navigator" data-module-navigator>
+          <button class="button" type="button" data-previous-module>← Previous</button>
+          <label>
+            <span>Current module</span>
+            <select data-module-picker>
+              <option value="startup">1. Startup, client, and routing</option>
+              <option value="auth">2. Login and registration</option>
+              <option value="navbar">3. Shared navigation</option>
+              <option value="timekeeping">4. Employee timekeeping</option>
+              <option value="worklog">5. Employee work-log display</option>
+              <option value="adminlogs">6. Admin logs, search, and CSV</option>
+              <option value="reminders">7. Reminder scheduling</option>
+              <option value="processor">8. Email Edge Function</option>
+              <option value="shifts">9. Shift schedules and date overrides</option>
+              <option value="database">10. Database and RLS</option>
+              <option value="styling">11. Global styling</option>
+            </select>
+          </label>
+          <span class="module-position" data-module-position>1 of 11</span>
+          <button class="button" type="button" data-next-module>Next →</button>
+        </div>
+        <nav class="module-rail" aria-label="Choose an application module" data-module-rail></nav>
+        <p class="keyboard-hint">Tip: use <kbd>Alt</kbd> + <kbd>←</kbd> or <kbd>→</kbd> to move between modules.</p>
+        <div class="overview-navigator" data-overview-navigator hidden>
+          <button class="button" type="button" data-previous-overview>← Previous</button>
+          <label>
+            <span>Current foundation</span>
+            <select data-overview-picker aria-label="Current foundation topic"></select>
+          </label>
+          <span class="module-position" data-overview-position></span>
+          <button class="button" type="button" data-next-overview>Next →</button>
+        </div>
+      </div>
+
+      <section class="study-order">
+        <h2>How to use this walkthrough</h2>
+        <ol>
+          <li>Open the modules in order on your first pass.</li>
+          <li>Read <strong>Overall</strong> before looking at syntax.</li>
+          <li>Open <strong>Whole functions</strong> next. Learn why each complete function exists, what goes in, what happens in order, and what comes out. Keep the full source closed until the story makes sense.</li>
+          <li>Use <strong>Guided code flow</strong> to study only the important related pieces in execution order. Each step connects its syntax to what changes on the actual website.</li>
+          <li>Open <strong>UI, JSX &amp; CSS</strong> to compare screen pictures with the exact JSX tree, dynamic braces, event handlers, Tailwind classes, and mobile breakpoints.</li>
+          <li>Open <strong>Code chunks</strong> and identify the input, work, and output.</li>
+          <li>If you have never coded, read each yellow <strong>If you have never coded before</strong> box before its syntax section. It explains ideas such as lists, <code>.map</code>, indexes, arrows, state, JSX, and database chains with small examples.</li>
+          <li>Stay on <strong>Plain English</strong> first. Move to <strong>Beginner code</strong> for line-by-line explanations, then use <strong>Technical detail</strong> when you are ready for exact syntax.</li>
+          <li>Use interactive <strong>Run next step</strong> examples to watch list operations and values change one turn at a time.</li>
+          <li>Select <strong>☆</strong> beside a useful cell to bookmark it. The Bookmarked cells button returns to that exact module, file, and cell later.</li>
+          <li>Use <strong>Logical explanation</strong> to trace when each line runs.</li>
+          <li>Use the Copy button only when you need to test a code chunk.</li>
+        </ol>
+      </section>
+
+      <section class="lesson">
+        <p class="eyebrow">Architecture map</p>
+        <h2>Know which layer you are reading</h2>
+        <p>AQLER Timesheet crosses four layers. When code is confusing, first identify which layer owns the current job.</p>
+        <div class="architecture-map">
+          <article><h3>React interface</h3><p>Components, JSX, state, effects, buttons, forms, and visible messages.</p></article>
+          <article><h3>Supabase client</h3><p>Browser requests for Auth and permitted database operations.</p></article>
+          <article><h3>Postgres</h3><p>Tables, durable rows, relationships, constraints, GRANT, and RLS.</p></article>
+          <article><h3>Server automation</h3><p>Cron invokes an Edge Function, which safely uses secrets and calls Brevo.</p></article>
+        </div>
+        <div class="flow" aria-label="Complete system flow"><div>User action</div><div>React handler</div><div>Supabase request</div><div>RLS and constraints</div><div>Result updates state</div><div>React renders</div></div>
+      </section>
+
+      <section class="lesson project-tree">
+        <p class="eyebrow">Project map</p>
+        <h2>Every taught file and where it belongs</h2>
+        <pre><code>timesheet-app/
+├── index.html                         Browser shell containing #root
+├── package.json                       Commands and library versions
+├── vite.config.js                     React build configuration
+├── eslint.config.js                   JavaScript and React code checks
+├── vercel.json                        Direct-URL rewrite for React Router
+├── postcss.config.js                  Tailwind and Autoprefixer processing
+├── tailwind.config.js                 Tailwind content paths and colors
+├── src/
+│   ├── main.jsx                       Mounts React and imports global CSS
+│   ├── App.jsx                        Session restoration and protected routes
+│   ├── index.css                      Active global CSS and Tailwind import
+│   ├── App.css                        Existing but currently unimported CSS
+│   ├── lib/supabase.js                Shared browser Supabase client
+│   ├── pages/
+│   │   ├── Login.jsx                  Password sign-in form
+│   │   ├── Register.jsx               Registration and validation
+│   │   ├── Home.jsx                   Employee timekeeping controller
+│   │   ├── Admin.jsx                  Admin logs, CSV, and reminders
+│   │   └── Shift.jsx                  Baselines and date-specific schedules
+│   └── components/
+│       ├── Navbar.jsx                 Shared navigation and identity
+│       ├── AlertMessage.jsx            Temporary employee feedback
+│       ├── TimeButtons.jsx             Time In/Out controls
+│       └── WorkLog.jsx                 Employee history display
+└── supabase/
+    ├── functions/process-email-reminders/index.ts
+    │                                      Due-checking and Brevo worker
+    └── migrations/*.sql                  Tables, relationships, constraints, RLS
+docs/modules/SHIFT_SCHEMA.sql              Shift schema reference taught in module 9</code></pre>
+        <aside class="callout warning"><strong>Intentionally not embedded</strong><code>.env</code> secret values, generated <code>package-lock.json</code>, build output, dependencies, binary images, Git metadata, and empty files are not learning source code.</aside>
+      </section>
+
+      <section class="lesson">
+        <p class="eyebrow">Technology and environment</p>
+        <h2>What runs the application</h2>
+        <div class="table-wrap"><table><thead><tr><th>Technology</th><th>Role in this app</th><th>Current declared version</th></tr></thead><tbody>
+          <tr><td>React</td><td>Components, state, effects, events, and rendering.</td><td>19.2.4</td></tr>
+          <tr><td>React Router</td><td>Client-side pages and redirects.</td><td>7.14.1</td></tr>
+          <tr><td>Vite</td><td>Development server and production bundle.</td><td>8.0.4</td></tr>
+          <tr><td>Tailwind CSS</td><td>Utility classes and design tokens.</td><td>4.2.2</td></tr>
+          <tr><td>Supabase JS</td><td>Browser Auth and Postgres requests.</td><td>2.103.3</td></tr>
+          <tr><td>Supabase Edge Functions</td><td>Server-side recurring email worker.</td><td>Deno runtime</td></tr>
+          <tr><td>Brevo</td><td>External transactional email delivery API.</td><td>HTTP API</td></tr>
+        </tbody></table></div>
+        <h3>Required browser environment variables</h3>
+        <div class="code-wrap"><pre><code>VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-browser-safe-anonymous-key</code></pre></div>
+        <h3>Required Edge Function secrets</h3>
+        <div class="code-wrap"><pre><code>SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+BREVO_API_KEY
+BREVO_FROM_EMAIL
+BREVO_FROM_NAME</code></pre></div>
+        <aside class="callout warning"><strong>Security boundary</strong>The anonymous key is designed for browser use with RLS. The service-role and Brevo keys bypass or control privileged services and must remain only in the Edge Function environment.</aside>
+      </section>
+
+      <section class="lesson">
+        <p class="eyebrow">Database mental model</p>
+        <h2>What each stored row looks like</h2>
+        <div class="table-wrap"><table><thead><tr><th>Table</th><th>Purpose</th><th>Important columns</th><th>Who may access it</th></tr></thead><tbody>
+          <tr><td><code>auth.users</code></td><td>Supabase-managed account identity.</td><td><code>id</code>, <code>email</code>, user metadata, app metadata</td><td>Managed by Supabase Auth; admin SQL can assign app role.</td></tr>
+          <tr><td><code>profiles</code></td><td>Display name and email usable in public-table relationships.</td><td><code>id</code>, <code>full_name</code>, <code>email</code></td><td>Employee reads own; admin reads all.</td></tr>
+          <tr><td><code>active_sessions</code></td><td>Durable current/open work session.</td><td><code>user_id</code>, <code>time_in</code>, <code>time_out</code></td><td>Employee manages own rows.</td></tr>
+          <tr><td><code>logs</code></td><td>Readable IN/OUT activity history.</td><td><code>type</code>, <code>date</code>, <code>time</code>, <code>duration</code></td><td>Employee manages own; admin reads all.</td></tr>
+          <tr><td><code>shifts</code></td><td>Normal recurring Monday–Sunday work pattern.</td><td><code>user_id</code>, <code>day_of_week</code>, start/end time</td><td>Employee reads own; admin manages all.</td></tr>
+          <tr><td><code>shift_overrides</code></td><td>Exception for one exact calendar date.</td><td><code>shift_date</code>, custom times, <code>is_day_off</code></td><td>Employee reads own; admin manages all.</td></tr>
+          <tr><td><code>email_reminders</code></td><td>Recurring email schedule and delivery result.</td><td>days, time, timezone, content, status, last sent date</td><td>Admins through RLS; Edge Function through service role.</td></tr>
+        </tbody></table></div>
+        <h3>Example related data</h3>
+        <div class="code-wrap"><pre><code>// One profile
+{
+  id: 'employee-uuid',
+  full_name: 'Glenda Cruz',
+  email: 'glenda@aqler.tech'
+}
+
+// One completed OUT log returned with its related profile
+{
+  id: 'log-uuid',
+  user_id: 'employee-uuid',
+  type: 'OUT',
+  date: '8/24/2026',
+  time: '5:02:10 PM',
+  duration: 9.03,
+  profiles: {
+    full_name: 'Glenda Cruz',
+    email: 'glenda@aqler.tech'
+  }
+}</code></pre></div>
+        <p>The nested <code>profiles</code> object is available because <code>logs.user_id</code> has a foreign key to <code>profiles.id</code>. The relationship exists in Postgres, not in React.</p>
+      </section>
+
+      <section class="lesson">
+        <p class="eyebrow">Syntax decoder</p>
+        <h2>How to read the repeated patterns</h2>
+        <div class="cards">
+          <article class="card"><h3>React state</h3><div class="code-wrap"><pre><code>const [logs, setLogs] = useState([])</code></pre></div><p><code>logs</code> is the current array. <code>setLogs</code> changes it and requests another render. <code>[]</code> is its first value.</p></article>
+          <article class="card"><h3>Arrow callback</h3><div class="code-wrap"><pre><code>onClick={() =&gt; cancelReminder(item.id)}</code></pre></div><p>React stores this unnamed function and calls it after a click. The wrapper lets it pass <code>item.id</code> later instead of calling immediately.</p></article>
+          <article class="card"><h3>Optional chaining</h3><div class="code-wrap"><pre><code>log.profiles?.full_name</code></pre></div><p>Read <code>full_name</code> only if <code>profiles</code> exists. Otherwise the result is <code>undefined</code> rather than an error.</p></article>
+          <article class="card"><h3>Object spread</h3><div class="code-wrap"><pre><code>{ ...current, userId: event.target.value }</code></pre></div><p>Copy every old property, then replace only <code>userId</code> with the new input value.</p></article>
+          <article class="card"><h3>Destructuring</h3><div class="code-wrap"><pre><code>const { data, error } = await query</code></pre></div><p>Wait for the query result object, then create local variables from its <code>data</code> and <code>error</code> properties.</p></article>
+          <article class="card"><h3>Query chain</h3><div class="code-wrap"><pre><code>supabase
+  .from('logs')
+  .select('*')
+  .eq('user_id', user.id)
+  .order('created_at', { ascending: false })</code></pre></div><p>Choose <code>logs</code>, request columns, keep this employee’s rows, and return newest rows first. The chain forms one request.</p></article>
+          <article class="card"><h3>Conditional rendering</h3><div class="code-wrap"><pre><code>{isAdmin &amp;&amp; &lt;AdminLink /&gt;}</code></pre></div><p>Render the element only when <code>isAdmin</code> is true. This controls visibility, while RLS controls real database permission.</p></article>
+          <article class="card"><h3>Ternary choice</h3><div class="code-wrap"><pre><code>loading ? 'Loading...' : 'Ready'</code></pre></div><p>Evaluate the condition before <code>?</code>. Use the first value when true and the value after <code>:</code> when false.</p></article>
+        </div>
+      </section>
+
+      <section class="lesson" id="promises">
+        <p class="eyebrow">Essential JavaScript foundation</p>
+        <h2>Promises, <code>.then()</code>, and <code>await</code></h2>
+        <p>A Promise is a JavaScript object representing a value or error that will become available later. Network, database, browser-storage, and Supabase operations commonly return Promises because they cannot finish instantly.</p>
+
+        <div class="flow" aria-label="Promise states">
+          <div><strong>Pending</strong><br><span class="muted">The work is still running.</span></div>
+          <div><strong>Fulfilled</strong><br><span class="muted">The work succeeded and produced a value.</span></div>
+          <div><strong>Rejected</strong><br><span class="muted">The work failed and produced an error.</span></div>
+        </div>
+
+        <h3>Normal value compared with a Promise</h3>
+        <div class="table-wrap"><table><thead><tr><th>Code</th><th>What the variable contains</th><th>When it is usable</th></tr></thead><tbody>
+          <tr><td><code>const name = 'Glenda'</code></td><td>The actual string.</td><td>Immediately.</td></tr>
+          <tr><td><code>const request = getSession()</code></td><td>A Promise representing the future result.</td><td>Use <code>.then()</code> or <code>await</code> to receive its completed value.</td></tr>
+          <tr><td><code>const result = await getSession()</code></td><td>The fulfilled result extracted from the Promise.</td><td>After the Promise finishes successfully.</td></tr>
+        </tbody></table></div>
+
+        <h3>How to know whether a function returns a Promise</h3>
+        <ol class="logic-steps">
+          <li><strong>Its definition begins with <code>async</code>.</strong><span>An async function always returns a Promise, even when its return statement contains an ordinary string or object.</span></li>
+          <li><strong>Documentation or editor hover shows <code>Promise&lt;Type&gt;</code>.</strong><span><code>Promise&lt;AuthResponse&gt;</code> means the future fulfilled value will be an AuthResponse.</span></li>
+          <li><strong>The returned value supports <code>.then(...)</code>.</strong><span>The expression before <code>.then</code> is a Promise or Promise-like “thenable.”</span></li>
+          <li><strong>The normal usage places <code>await</code> before it.</strong><span>This is a strong clue, although JavaScript technically permits await on ordinary values too.</span></li>
+          <li><strong>Logging the unawaited result shows <code>Promise { &lt;pending&gt; }</code>.</strong><span>This runtime check is useful while learning and debugging.</span></li>
+        </ol>
+        <aside class="callout warning"><strong>Function-call syntax alone is not enough</strong><code>someFunction()</code> could return any type. The definition, type information, documentation, or returned object tells you whether it is a Promise.</aside>
+
+        <h3>The exact App session code</h3>
+        <div class="code-wrap"><pre><code>useEffect(() =&gt; {
+  supabase.auth.getSession().then(({ data: { session } }) =&gt; {
+    setSession(session)
+    setLoading(false)
+  })
+}, [])</code></pre></div>
+
+        <div class="flow" aria-label="getSession Promise timeline">
+          <div>App renders with loading true</div>
+          <div>React runs the effect</div>
+          <div><code>getSession()</code> returns a pending Promise</div>
+          <div><code>.then()</code> registers its callback</div>
+          <div>Supabase resolves the Promise</div>
+          <div>Callback updates state</div>
+          <div>React renders again</div>
+        </div>
+
+        <details open>
+          <summary>What exactly does <code>.then(callback)</code> do?</summary>
+          <p><code>.then()</code> does not contain the session and does not run its callback immediately. It registers a function to be called after the preceding Promise fulfills. The Promise’s resolved value becomes the callback’s first argument.</p>
+          <div class="code-wrap"><pre><code>const promise = supabase.auth.getSession()
+
+promise.then((result) =&gt; {
+  console.log(result)
+})</code></pre></div>
+          <p>JavaScript continues after registering the callback. When Supabase finishes, the callback receives approximately:</p>
+          <div class="code-wrap"><pre><code>{
+  data: {
+    session: {
+      user: {
+        id: 'user-uuid',
+        email: 'employee@example.com'
+      }
+    }
+  },
+  error: null
+}</code></pre></div>
+        </details>
+
+        <details>
+          <summary>What does <code>({ data: { session } })</code> mean?</summary>
+          <p>This is nested destructuring. It skips directly through the result object and creates a local variable named <code>session</code>.</p>
+          <div class="code-wrap"><pre><code>// Short version
+.then(({ data: { session } }) =&gt; {
+  setSession(session)
+})
+
+// Equivalent expanded version
+.then((result) =&gt; {
+  const data = result.data
+  const session = data.session
+  setSession(session)
+})</code></pre></div>
+        </details>
+
+        <details>
+          <summary>How is <code>await</code> different?</summary>
+          <p><code>.then()</code> registers a callback. <code>await</code> pauses only the current async function until the Promise settles. It does not freeze React or the browser.</p>
+          <div class="table-wrap"><table><thead><tr><th><code>.then()</code> style</th><th><code>await</code> style</th></tr></thead><tbody><tr><td><pre><code>getSession().then((result) =&gt; {
+  console.log(result)
+})</code></pre></td><td><pre><code>async function load() {
+  const result = await getSession()
+  console.log(result)
+}</code></pre></td></tr></tbody></table></div>
+        </details>
+
+        <details>
+          <summary>How are Promise errors handled?</summary>
+          <div class="code-wrap"><pre><code>supabase.auth
+  .getSession()
+  .then((result) =&gt; {
+    console.log(result)
+  })
+  .catch((error) =&gt; {
+    console.error(error)
+  })
+  .finally(() =&gt; {
+    setLoading(false)
+  })</code></pre></div>
+          <p><code>.catch()</code> receives a rejected Promise error. <code>.finally()</code> runs after success or failure. Supabase often reports operation problems in a resolved <code>error</code> property too, so its returned object must also be checked.</p>
+        </details>
+
+        <details>
+          <summary>Practice: predict the output order</summary>
+          <div class="code-wrap"><pre><code>console.log('A')
+
+getSession().then(() =&gt; {
+  console.log('B')
+})
+
+console.log('C')</code></pre></div>
+          <p><strong>Answer:</strong> normally <code>A</code>, then <code>C</code>, then <code>B</code>. Registering <code>.then()</code> does not block the following synchronous line. <code>B</code> waits for the Promise callback.</p>
+        </details>
+
+        <aside class="callout success"><strong>Core rule</strong>A normal value is available now. A Promise represents a value or error available later. Use <code>.then()</code> or <code>await</code> to work with its completed value.</aside>
+      </section>
+
+      <section class="lesson" id="syntax-handbook">
+        <p class="eyebrow">Complete project syntax handbook</p>
+        <h2>Look up every detected method, operator, hook, and API</h2>
+        <p>This index is generated from the syntax actually detected in the embedded project source. The same explanation also appears directly beneath each notebook cell where the syntax is used.</p>
+        <label class="syntax-search-label" for="syntax-search">Search syntax or meaning</label>
+        <input id="syntax-search" class="syntax-search" type="search" placeholder="Try .then, useEffect, map, RLS, Blob, md:, or JSON" data-syntax-search>
+        <nav class="syntax-filters" aria-label="Filter syntax by category" data-syntax-filters></nav>
+        <p class="muted" data-syntax-count>Loading syntax reference…</p>
+        <div class="syntax-index" data-syntax-index></div>
+        <nav class="syntax-pagination" aria-label="Syntax result pages" data-syntax-pagination></nav>
+      </section>
+
+      <section class="lesson">
+        <p class="eyebrow">Complete user journeys</p>
+        <h2>See how modules cooperate before studying them separately</h2>
+        <div class="journey-grid">
+          <article><h3>Employee Time In</h3><ol><li>App restores the session.</li><li>Home loads logs and an open session.</li><li>TimeButtons calls Home’s <code>timeIn</code>.</li><li>Home inserts <code>active_sessions</code>.</li><li>Home inserts an IN <code>logs</code> row.</li><li>React prepends the row and disables Time In.</li></ol></article>
+          <article><h3>Admin views and exports</h3><ol><li>App verifies admin app metadata.</li><li>Admin loads logs joined to profiles.</li><li>RLS permits all-log SELECT.</li><li>Search creates <code>filteredLogs</code>.</li><li>The table maps the filtered rows.</li><li>Export converts the same rows into CSV.</li></ol></article>
+          <article><h3>Recurring email</h3><ol><li>Admin inserts an active reminder.</li><li>Cron POSTs to the Edge Function.</li><li>The worker checks weekday and local time.</li><li>It claims the row using <code>last_sent_on</code>.</li><li>Brevo receives the email request.</li><li>Success or failure is saved for inspection/retry.</li></ol></article>
+        </div>
+      </section>
+
+      <section class="lesson module-section" id="startup">
+        <div class="module-heading"><span class="card-number">1</span><div><h2>Startup, Supabase client, and routing</h2><p>Starts React, creates one database client, restores authentication, and chooses the page.</p></div></div>
+        <ul class="file-list"><li><code>index.html</code></li><li><code>package.json</code></li><li><code>vite.config.js</code></li><li><code>eslint.config.js</code></li><li><code>vercel.json</code></li><li><code>src/main.jsx</code></li><li><code>src/lib/supabase.js</code></li><li><code>src/App.jsx</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Startup views">
+          <button class="module-tab" role="tab" aria-selected="true" data-panel="startup-overall">Overall</button>
+          <button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="startup-code">Code chunks</button>
+          <button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="startup-logic">Logical explanation</button>
+        </div>
+        <div class="module-panel" id="startup-overall" role="tabpanel">
+          <p><code>index.html</code> provides the browser root. <code>package.json</code>, Vite, ESLint, and Vercel configuration define commands, compilation, checks, and direct-URL routing. <code>main.jsx</code> attaches React to <code>root</code>. <code>supabase.js</code> creates the shared client from Vite environment variables. <code>App.jsx</code> restores the session, listens for future login/logout events, and protects routes.</p>
+          <div class="flow"><div>index.html #root</div><div>main.jsx</div><div>App.jsx</div><div>Supabase session</div><div>Chosen route</div></div>
+        </div>
+        <div class="module-panel" id="startup-code" role="tabpanel" hidden>
+          <h3>Mount the root component</h3>
+          <div class="code-wrap"><pre><code>ReactDOM.createRoot(document.getElementById('root')).render(
+  &lt;React.StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/React.StrictMode&gt;
+)</code></pre></div>
+          <p><code>getElementById</code> finds the browser container. <code>render</code> tells React to place <code>App</code> inside it.</p>
+          <h3>Create the shared client</h3>
+          <div class="code-wrap"><pre><code>export const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)</code></pre></div>
+          <p>Every module imports the same configured client. Only the browser-safe anonymous key belongs here.</p>
+          <h3>Protect the admin route</h3>
+          <div class="code-wrap"><pre><code>session?.user?.app_metadata?.role === 'admin'
+  ? &lt;Admin session={session} /&gt;
+  : &lt;Navigate to="/" /&gt;</code></pre></div>
+          <p>Optional chaining prevents an error while session or user data is missing. The ternary chooses the admin page or redirect.</p>
+        </div>
+        <div class="module-panel" id="startup-logic" role="tabpanel" hidden>
+          <ol class="logic-steps">
+            <li><strong>The browser loads the JavaScript bundle.</strong><span><code>main.jsx</code> renders <code>App</code>.</span></li>
+            <li><strong><code>App</code> begins with loading true.</strong><span>No protected page renders before the existing session is checked.</span></li>
+            <li><strong><code>getSession()</code> reads the stored auth session.</strong><span>React saves it with <code>setSession</code>, then ends loading.</span></li>
+            <li><strong>The auth listener subscribes.</strong><span>Later login and logout events replace session state.</span></li>
+            <li><strong>The router evaluates the requested path.</strong><span>Session and admin role determine which element is rendered.</span></li>
+            <li><strong>Cleanup unsubscribes on unmount.</strong><span>This prevents an unused listener from remaining active.</span></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="lesson module-section" id="auth">
+        <div class="module-heading"><span class="card-number">2</span><div><h2>Login and registration</h2><p>Collects credentials, validates registration, and calls Supabase Auth.</p></div></div>
+        <ul class="file-list"><li><code>src/pages/Login.jsx</code></li><li><code>src/pages/Register.jsx</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Authentication views">
+          <button class="module-tab" role="tab" aria-selected="true" data-panel="auth-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="auth-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="auth-logic">Logical explanation</button>
+        </div>
+        <div class="module-panel" id="auth-overall" role="tabpanel">
+          <p>Both pages use controlled inputs: React state is the current source of truth for each field. Login sends email and password to Supabase. Registration first performs browser validation, then sends the full name as user metadata so the database profile trigger can copy it.</p>
+        </div>
+        <div class="module-panel" id="auth-code" role="tabpanel" hidden>
+          <h3>Sign in</h3><div class="code-wrap"><pre><code>const { error } = await supabase.auth.signInWithPassword({
+  email,
+  password,
+})
+if (error) setError(error.message)</code></pre></div>
+          <h3>Validate before registration</h3><div class="code-wrap"><pre><code>if (!fullName || !email || !password || !confirmPassword) {
+  setError('All fields are required.')
+  return
+}
+
+if (password !== confirmPassword) {
+  setError('Passwords do not match.')
+  return
+}</code></pre></div>
+          <h3>Register with metadata</h3><div class="code-wrap"><pre><code>await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    data: { full_name: fullName }
+  }
+})</code></pre></div>
+        </div>
+        <div class="module-panel" id="auth-logic" role="tabpanel" hidden>
+          <ol class="logic-steps">
+            <li><strong>The user types.</strong><span>Each <code>onChange</code> copies the input value into state.</span></li>
+            <li><strong>The user clicks the button.</strong><span>The login or registration handler runs.</span></li>
+            <li><strong>Registration checks local rules.</strong><span>An early <code>return</code> stops the request when a rule fails.</span></li>
+            <li><strong>Supabase Auth receives the request.</strong><span>It returns an error or creates/restores a session.</span></li>
+            <li><strong>The auth listener in <code>App</code> receives the session.</strong><span>The router automatically moves a signed-in user to Home.</span></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="lesson module-section" id="navbar">
+        <div class="module-heading"><span class="card-number">3</span><div><h2>Shared navigation</h2><p>Displays identity, role-specific links, responsive layout, and sign out.</p></div></div>
+        <ul class="file-list"><li><code>src/components/Navbar.jsx</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Navbar views"><button class="module-tab" role="tab" aria-selected="true" data-panel="nav-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="nav-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="nav-logic">Logical explanation</button></div>
+        <div class="module-panel" id="nav-overall" role="tabpanel"><p>The parent page supplies <code>user</code>, <code>onSignOut</code>, and <code>isAdmin</code> as props. The component does not load data itself. It renders the same reusable header on Home and Admin.</p></div>
+        <div class="module-panel" id="nav-code" role="tabpanel" hidden>
+          <div class="code-wrap"><pre><code>{isAdmin &amp;&amp; (
+  &lt;Link to="/admin"&gt;Employee Logs&lt;/Link&gt;
+)}</code></pre></div><p>The admin link exists only when the prop is true.</p>
+          <div class="code-wrap"><pre><code>&lt;p className="max-w-40 truncate md:max-w-none"&gt;
+  {user.email}
+&lt;/p&gt;</code></pre></div><p>Small screens limit and truncate the email. At the medium breakpoint, the width restriction is removed.</p>
+          <div class="code-wrap"><pre><code>&lt;button onClick={onSignOut}&gt;Sign Out&lt;/button&gt;</code></pre></div><p>React stores the function for the future click; it does not call it during render.</p>
+        </div>
+        <div class="module-panel" id="nav-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>The parent renders Navbar.</strong><span>Props describe the current user and permitted interface.</span></li><li><strong>React evaluates <code>isAdmin</code>.</strong><span>Admin-only link and label are included or skipped.</span></li><li><strong>Tailwind arranges the children.</strong><span>Mobile uses a column; <code>md:flex-row</code> uses a row on wider screens.</span></li><li><strong>Sign Out is clicked.</strong><span>The parent callback calls Supabase, and App's auth listener clears the session.</span></li></ol></div>
+      </section>
+
+      <section class="lesson module-section" id="timekeeping">
+        <div class="module-heading"><span class="card-number">4</span><div><h2>Employee timekeeping</h2><p>Loads the employee session, prevents duplicate actions, and records Time In and Time Out.</p></div></div>
+        <ul class="file-list"><li><code>src/pages/Home.jsx</code></li><li><code>src/components/TimeButtons.jsx</code></li><li><code>src/components/AlertMessage.jsx</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Timekeeping views"><button class="module-tab" role="tab" aria-selected="true" data-panel="time-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="time-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="time-logic">Logical explanation</button></div>
+        <div class="module-panel" id="time-overall" role="tabpanel"><p><code>Home</code> owns the data and handlers. <code>TimeButtons</code> receives callbacks and disabled-state information. <code>AlertMessage</code> displays temporary feedback. The durable open session is stored in <code>active_sessions</code>; the readable activity history is stored in <code>logs</code>.</p><div class="flow"><div>Load logs/session</div><div>Employee clicks</div><div>Guard rejects duplicates</div><div>Write active session</div><div>Write log</div><div>Update React state</div></div></div>
+        <div class="module-panel" id="time-code" role="tabpanel" hidden>
+          <h3>Load the open session</h3><div class="code-wrap"><pre><code>const { data: sessionData } = await supabase
+  .from('active_sessions')
+  .select('*')
+  .eq('user_id', user.id)
+  .is('time_out', null)
+  .maybeSingle()</code></pre></div><p><code>maybeSingle</code> accepts zero or one result. The partial unique index prevents more than one open row per user.</p>
+          <h3>Time In guard and insert</h3><div class="code-wrap"><pre><code>if (isLoading || activeSession) {
+  showAlert('You are already timed in!')
+  return
+}
+
+const { error, data } = await supabase
+  .from('active_sessions')
+  .insert({ user_id: user.id, time_in: now.toISOString() })
+  .select()</code></pre></div>
+          <h3>Calculate Time Out duration</h3><div class="code-wrap"><pre><code>const savedTimeIn = new Date(savedSession.time_in)
+const hours = ((now - savedTimeIn) / (1000 * 60 * 60)).toFixed(2)</code></pre></div><p>Subtracting Date values returns milliseconds. Dividing converts milliseconds to hours.</p>
+          <h3>Disable impossible buttons</h3><div class="code-wrap"><pre><code>disabled={isLoading || !!activeTimeIn}
+disabled={isLoading || !activeTimeIn}</code></pre></div><p>Time In is disabled during loading or an active session. Time Out is disabled when there is no active session.</p>
+        </div>
+        <div class="module-panel" id="time-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>Home loads logs and any open session.</strong><span>The employee ID filters both queries; RLS independently enforces ownership.</span></li><li><strong>Time In checks local state.</strong><span>The guard prevents an obvious duplicate click before a request is sent.</span></li><li><strong>The database inserts an active session.</strong><span>The unique index is the final duplicate-session protection.</span></li><li><strong>A separate IN log is inserted.</strong><span>React prepends the returned row to the visible log list.</span></li><li><strong>Time Out uses a processing ref as a lock.</strong><span>It blocks rapid double clicks without waiting for a render.</span></li><li><strong>The active row receives <code>time_out</code>.</strong><span>The query also requires the row to still be open.</span></li><li><strong>An OUT log stores the calculated duration.</strong><span>State and buttons return to the inactive-session condition.</span></li></ol></div>
+      </section>
+
+      <section class="lesson module-section" id="worklog">
+        <div class="module-heading"><span class="card-number">5</span><div><h2>Employee work-log display</h2><p>Formats duration, marks incomplete days, and reveals logs in groups of ten.</p></div></div>
+        <ul class="file-list"><li><code>src/components/WorkLog.jsx</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Work log views"><button class="module-tab" role="tab" aria-selected="true" data-panel="work-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="work-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="work-logic">Logical explanation</button></div>
+        <div class="module-panel" id="work-overall" role="tabpanel"><p>This component receives the complete employee <code>logs</code> array from Home. Its “pagination” is client-side display limiting: all rows were already downloaded, and <code>slice</code> chooses how many to show.</p></div>
+        <div class="module-panel" id="work-code" role="tabpanel" hidden>
+          <div class="code-wrap"><pre><code>const [limit, setLimit] = useState(10)
+const visibleLogs = logs.slice(0, limit)</code></pre></div><p><code>slice(0, 10)</code> returns positions 0 through 9. It does not modify the original array.</p>
+          <div class="code-wrap"><pre><code>const duration = parseFloat(log.duration) || 0
+const totalMinutes = Math.round(duration * 60)
+const isIncomplete = log.type === 'OUT' &amp;&amp; totalMinutes &lt; 9 * 60</code></pre></div><p>Only OUT logs are judged against the current nine-hour completeness rule.</p>
+          <div class="code-wrap"><pre><code>onClick={() =&gt; setLimit((x) =&gt; x + 10)}</code></pre></div><p>The updater receives the latest limit and returns a value ten higher.</p>
+        </div>
+        <div class="module-panel" id="work-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>Home passes logs as a prop.</strong><span>WorkLog does not query Supabase.</span></li><li><strong><code>slice</code> creates the visible subset.</strong><span>The initial limit is ten.</span></li><li><strong><code>map</code> renders one card per visible row.</strong><span>Duration and completeness are calculated for that row.</span></li><li><strong>Show more changes state.</strong><span>React rerenders and slice returns ten more rows.</span></li><li><strong>Show less resets the limit.</strong><span>No database request occurs during either button click.</span></li></ol></div>
+      </section>
+
+      <section class="lesson module-section" id="adminlogs">
+        <div class="module-heading"><span class="card-number">6</span><div><h2>Administrator logs, search, and CSV export</h2><p>Loads all permitted employees and logs, filters them in memory, and downloads the current result.</p></div></div>
+        <ul class="file-list"><li><code>src/pages/Admin.jsx</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Admin log views"><button class="module-tab" role="tab" aria-selected="true" data-panel="admin-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="admin-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="admin-logic">Logical explanation</button></div>
+        <div class="module-panel" id="admin-overall" role="tabpanel"><p>The current Admin page downloads all logs during its first effect. <code>useMemo</code> derives <code>filteredLogs</code> whenever logs or search changes. The table and CSV export both use that same derived array. This is simple, but it is not yet server-side pagination and will become slower as the table grows.</p></div>
+        <div class="module-panel" id="admin-code" role="tabpanel" hidden>
+          <h3>Load related profiles</h3><div class="code-wrap"><pre><code>supabase
+  .from('logs')
+  .select('id, type, time, date, duration, created_at, user_id, profiles(full_name, email)')
+  .order('created_at', { ascending: false })</code></pre></div>
+          <h3>Memoized client search</h3><div class="code-wrap"><pre><code>const filteredLogs = useMemo(() =&gt; {
+  const term = search.trim().toLowerCase()
+  if (!term) return logs
+
+  return logs.filter((log) =&gt; {
+    const employee = log.profiles
+    return [employee?.full_name, employee?.email, log.type, log.date]
+      .filter(Boolean)
+      .some((value) =&gt; value.toLowerCase().includes(term))
+  })
+}, [logs, search])</code></pre></div>
+          <h3>Create and click a temporary download link</h3><div class="code-wrap"><pre><code>const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
+const url = URL.createObjectURL(blob)
+const link = document.createElement('a')
+link.href = url
+link.download = `aqler-work-logs-${new Date().toISOString().slice(0, 10)}.csv`
+document.body.appendChild(link)
+link.click()
+link.remove()
+URL.revokeObjectURL(url)</code></pre></div>
+        </div>
+        <div class="module-panel" id="admin-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>The first effect starts three queries together.</strong><span><code>Promise.all</code> waits for logs, profiles, and reminders.</span></li><li><strong>Admin RLS permits cross-employee reads.</strong><span>The React route check is not the database permission.</span></li><li><strong>Typing changes <code>search</code>.</strong><span><code>useMemo</code> recalculates the filtered array in the browser.</span></li><li><strong>The table maps filtered rows.</strong><span>Nested <code>profiles</code> provides name and email.</span></li><li><strong>Export maps the same rows into columns.</strong><span>Quotes are escaped by doubling them for valid CSV.</span></li><li><strong>A Blob becomes a temporary URL.</strong><span>The temporary anchor is clicked automatically, removed, and its URL memory released.</span></li></ol></div>
+      </section>
+
+      <section class="lesson module-section" id="reminders">
+        <div class="module-heading"><span class="card-number">7</span><div><h2>Recurring reminder scheduling</h2><p>Lets an administrator choose employee, weekdays, time, subject, and message.</p></div></div>
+        <ul class="file-list"><li><code>src/pages/Admin.jsx</code></li><li><code>public.email_reminders</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Reminder views"><button class="module-tab" role="tab" aria-selected="true" data-panel="rem-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="rem-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="rem-logic">Logical explanation</button></div>
+        <div class="module-panel" id="rem-overall" role="tabpanel"><p>Admin stores form values in one <code>reminder</code> object. Weekdays use JavaScript day numbers: Sunday 0 through Saturday 6. Saving inserts an active recurring schedule. Cancelling permanently deletes its row, so only active schedules remain in the list.</p></div>
+        <div class="module-panel" id="rem-code" role="tabpanel" hidden>
+          <h3>Toggle a weekday</h3><div class="code-wrap"><pre><code>daysOfWeek: selected
+  ? current.daysOfWeek.filter((value) =&gt; value !== day.value)
+  : [...current.daysOfWeek, day.value]</code></pre></div><p>If selected, filter removes the value. Otherwise spread copies the old days and appends it.</p>
+          <h3>Insert a recurring schedule</h3><div class="code-wrap"><pre><code>await supabase.from('email_reminders').insert({
+  user_id: reminder.userId,
+  days_of_week: reminder.daysOfWeek,
+  reminder_time: reminder.reminderTime,
+  timezone: 'Asia/Manila',
+  status: 'active',
+  subject: reminder.subject.trim(),
+  message: reminder.message.trim(),
+  created_by: session.user.id,
+})</code></pre></div>
+          <h3>Cancel by deleting</h3><div class="code-wrap"><pre><code>await supabase
+  .from('email_reminders')
+  .delete()
+  .eq('id', id)
+  .eq('status', 'active')</code></pre></div>
+        </div>
+        <div class="module-panel" id="rem-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>Admin selects form values.</strong><span>Each handler returns a new reminder object.</span></li><li><strong>Submit prevents page reload.</strong><span>Validation stops empty employee, day, time, subject, or message values.</span></li><li><strong>An active row is inserted.</strong><span>Admin RLS must approve the new row.</span></li><li><strong>The returned joined row is prepended.</strong><span>The list updates without reloading every schedule.</span></li><li><strong>Cancel deletes the active row.</strong><span><code>filter</code> removes it from React state after success.</span></li><li><strong>The Edge Function handles actual sending.</strong><span>Saving a row does not itself wait until the scheduled time or send email.</span></li></ol></div>
+      </section>
+
+      <section class="lesson module-section" id="processor">
+        <div class="module-heading"><span class="card-number">8</span><div><h2>Scheduled email Edge Function</h2><p>Checks due schedules, claims each one once per local date, and calls Brevo.</p></div></div>
+        <ul class="file-list"><li><code>supabase/functions/process-email-reminders/index.ts</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Email processor views"><button class="module-tab" role="tab" aria-selected="true" data-panel="proc-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="proc-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="proc-logic">Logical explanation</button></div>
+        <div class="module-panel" id="proc-overall" role="tabpanel"><p>The function is an HTTP worker. A Supabase Cron job must POST to it regularly. It uses the service-role key on the server, loads up to 50 active reminders, evaluates each schedule in its timezone, prevents duplicate same-day sends, and sends through Brevo.</p><aside class="callout warning"><strong>Important</strong>Creating an Edge Function does not automatically schedule it. A Cron job or other caller must invoke the endpoint.</aside></div>
+        <div class="module-panel" id="proc-code" role="tabpanel" hidden>
+          <h3>Load active work</h3><div class="code-wrap"><pre><code>const { data: schedules, error } = await supabase
+  .from('email_reminders')
+  .select('id, subject, message, days_of_week, reminder_time, timezone, last_sent_on, profiles(email, full_name)')
+  .eq('status', 'active')
+  .limit(50)</code></pre></div>
+          <h3>Skip schedules that are not due</h3><div class="code-wrap"><pre><code>if (
+  !reminder.days_of_week?.includes(weekday) ||
+  localTime &lt; scheduledTime ||
+  reminder.last_sent_on === localDate
+) continue</code></pre></div>
+          <h3>Claim before sending</h3><div class="code-wrap"><pre><code>const { data: claimed } = await supabase
+  .from('email_reminders')
+  .update({ last_sent_on: localDate })
+  .eq('id', reminder.id)
+  .eq('status', 'active')
+  .or(`last_sent_on.is.null,last_sent_on.neq.${localDate}`)
+  .select('id')
+  .maybeSingle()</code></pre></div>
+          <h3>Call Brevo</h3><div class="code-wrap"><pre><code>await fetch('https://api.brevo.com/v3/smtp/email', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'api-key': brevoApiKey,
+  },
+  body: JSON.stringify({
+    sender: { name: brevoFromName, email: brevoFromEmail },
+    to: [{ email: recipient.email }],
+    subject: reminder.subject,
+    textContent: reminder.message,
+  }),
+})</code></pre></div>
+        </div>
+        <div class="module-panel" id="proc-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>Cron sends POST.</strong><span>Any other HTTP method receives 405.</span></li><li><strong>The service-role client loads active schedules.</strong><span>This secret stays inside the Edge Function environment.</span></li><li><strong>Current date and time are calculated per schedule timezone.</strong><span><code>formatToParts</code> extracts comparable pieces.</span></li><li><strong>Non-due schedules are skipped.</strong><span>Wrong weekday, early time, or already sent today all continue the loop.</span></li><li><strong>The row is claimed atomically.</strong><span>Only a caller that changes <code>last_sent_on</code> proceeds.</span></li><li><strong>Brevo receives the email request.</strong><span>Success stores <code>sent_at</code>; failure stores error text and releases the daily claim for retry.</span></li><li><strong>The function returns a processing summary.</strong><span>The response reports each claimed reminder as sent or failed.</span></li></ol></div>
+      </section>
+
+      <section class="lesson module-section" id="shifts">
+        <div class="module-heading"><span class="card-number">9</span><div><h2>Shift schedules and date overrides</h2><p>Combines a repeating weekly baseline with exceptions for exact calendar dates.</p></div></div>
+        <ul class="file-list"><li><code>src/pages/Shift.jsx</code></li><li><code>src/App.jsx</code></li><li><code>src/components/Navbar.jsx</code></li><li><code>docs/modules/SHIFT_SCHEMA.sql</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Shift schedule views"><button class="module-tab" role="tab" aria-selected="true" data-panel="shift-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="shift-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="shift-logic">Logical explanation</button></div>
+        <div class="module-panel" id="shift-overall" role="tabpanel">
+          <p><code>shifts</code> stores the employee’s normal repeating weekday pattern. <code>shift_overrides</code> stores only dates that differ from that pattern. The page loads both tables and builds one effective seven-day view by checking the exact date first and the weekday baseline second.</p>
+          <div class="flow" aria-label="Shift schedule priority"><div>Displayed date</div><div>Find exact-date override</div><div>Override found: use custom time or day off</div><div>No override: find weekday baseline</div><div>Render effective shift</div></div>
+          <div class="table-wrap"><table><thead><tr><th>Admin choice</th><th>Database action</th><th>Meaning when displayed</th></tr></thead><tbody>
+            <tr><td>Recurring working day</td><td>Upsert one <code>shifts</code> row using employee plus weekday.</td><td>This time repeats every matching weekday.</td></tr>
+            <tr><td>Recurring day off</td><td>Delete that weekday’s <code>shifts</code> row.</td><td>A missing baseline row means the employee normally has that day off.</td></tr>
+            <tr><td>Custom time</td><td>Upsert one <code>shift_overrides</code> row using employee plus exact date.</td><td>That date uses the custom hours instead of the baseline.</td></tr>
+            <tr><td>Date-specific day off</td><td>Upsert an override with null times and <code>is_day_off = true</code>.</td><td>Only that calendar date becomes a day off.</td></tr>
+            <tr><td>Use baseline</td><td>Delete the exact-date override.</td><td>The page falls back to the normal weekday row again.</td></tr>
+          </tbody></table></div>
+          <aside class="callout warning"><strong>Philippine time model</strong>Recurring and override hours use PostgreSQL <code>time without time zone</code> because they are local clock values such as 09:00. The app defines them as Philippine Time (UTC+8); audit timestamps such as <code>created_at</code> remain <code>timestamptz</code>.</aside>
+        </div>
+        <div class="module-panel" id="shift-code" role="tabpanel" hidden><p>The complete current Shift page, route, navigation, and schema reference load here as notebook cells.</p></div>
+        <div class="module-panel" id="shift-logic" role="tabpanel" hidden><ol class="logic-steps">
+          <li><strong>The route passes the current session.</strong><span><code>App.jsx</code> requires a session before rendering <code>Shift</code>; the Navbar link makes the route reachable.</span></li>
+          <li><strong>The component identifies the role.</strong><span>JWT app metadata decides whether the interface is an admin editor or employee read-only schedule. RLS independently protects the rows.</span></li>
+          <li><strong>An admin employee is selected.</strong><span>The profiles query supplies IDs and display labels. Employees use their own session user ID.</span></li>
+          <li><strong>The displayed Monday and Sunday are calculated.</strong><span>Date helpers normalize the selected week and create seven local <code>YYYY-MM-DD</code> values.</span></li>
+          <li><strong>Both schedule tables load together.</strong><span><code>Promise.all</code> waits for the employee baseline and only the overrides between the selected week’s first and last dates.</span></li>
+          <li><strong>The week is merged in memory.</strong><span>For each date, <code>buildWeekSchedule</code> prefers an override. Without one, it copies the matching <code>day_of_week</code> baseline.</span></li>
+          <li><strong>Controlled inputs edit React state.</strong><span>Multi-day tools update several objects with <code>map</code>; individual controls replace one matching day or date.</span></li>
+          <li><strong>Baseline save validates then synchronizes.</strong><span>Enabled weekdays are upserted using <code>user_id,day_of_week</code>; previously saved weekdays now marked off are deleted.</span></li>
+          <li><strong>Specific-week save synchronizes exceptions.</strong><span>Custom times and date-specific days off are upserted using <code>user_id,shift_date</code>. Dates switched to Use baseline have their override deleted.</span></li>
+          <li><strong>The page reloads permitted rows.</strong><span>Supabase applies GRANT, RLS, and constraints before returning the saved result for React to render.</span></li>
+        </ol></div>
+      </section>
+
+      <section class="lesson module-section" id="database">
+        <div class="module-heading"><span class="card-number">10</span><div><h2>Database schema, relationships, and RLS</h2><p>Defines durable data, automatic profiles, admin access, and recurring schedules.</p></div></div>
+        <ul class="file-list"><li><code>supabase/migrations/20260813181500_create_timesheet_schema.sql</code></li><li><code>...190000_add_admin_access.sql</code></li><li><code>...193000_link_logs_to_profiles.sql</code></li><li><code>...200000_add_email_reminders.sql</code></li><li><code>...203000_make_reminders_recurring.sql</code></li><li><code>...210000_remove_cancelled_reminders.sql</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Database views"><button class="module-tab" role="tab" aria-selected="true" data-panel="db-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="db-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="db-logic">Logical explanation</button></div>
+        <div class="module-panel" id="db-overall" role="tabpanel"><p><code>logs</code> stores IN/OUT history. <code>active_sessions</code> stores durable open sessions. <code>profiles</code> mirrors display information from Auth. <code>email_reminders</code> stores recurring schedules. Foreign keys create relationships, constraints protect valid data, GRANT opens operations to the authenticated database role, and RLS narrows them per user.</p></div>
+        <div class="module-panel" id="db-code" role="tabpanel" hidden>
+          <h3>Allow one open session</h3><div class="code-wrap"><pre><code>create unique index if not exists one_open_session_per_user
+  on public.active_sessions (user_id)
+  where time_out is null;</code></pre></div>
+          <h3>Create a profile after Auth changes</h3><div class="code-wrap"><pre><code>create trigger on_auth_user_created
+  after insert or update of email, raw_user_meta_data on auth.users
+  for each row execute procedure public.handle_new_user();</code></pre></div>
+          <h3>Employee and admin SELECT policies</h3><div class="code-wrap"><pre><code>using ((select auth.uid()) = user_id)
+
+using (
+  (select auth.jwt() -&gt; 'app_metadata' -&gt;&gt; 'role') = 'admin'
+)</code></pre></div><p>Permissive SELECT policies combine with OR: an employee may pass ownership, while an admin may pass role authorization.</p>
+          <h3>Create the PostgREST relationship</h3><div class="code-wrap"><pre><code>alter table public.logs
+  add constraint logs_user_id_profiles_fkey
+  foreign key (user_id)
+  references public.profiles(id)
+  on delete cascade;</code></pre></div>
+        </div>
+        <div class="module-panel" id="db-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>Migrations run in timestamp order.</strong><span>Later files intentionally modify objects created earlier.</span></li><li><strong>Auth creates or updates a user.</strong><span>The security-definer trigger copies ID, name, and email into profiles.</span></li><li><strong>A browser query reaches Postgres.</strong><span>GRANT first permits the authenticated role to attempt the command.</span></li><li><strong>RLS evaluates applicable policies per row.</strong><span>Ownership or admin JWT claims decide access.</span></li><li><strong>Constraints validate writes.</strong><span>Types, foreign keys, checks, and unique indexes reject invalid states.</span></li><li><strong>The logs/profile foreign key informs PostgREST.</strong><span>Nested <code>profiles(full_name, email)</code> selects become possible after schema reload.</span></li><li><strong>Recurring migrations reshape reminders.</strong><span>Weekdays, time, timezone, and last-sent date replace a one-time-only design.</span></li></ol></div>
+      </section>
+
+      <section class="lesson module-section" id="styling">
+        <div class="module-heading"><span class="card-number">11</span><div><h2>Global styling</h2><p>Defines the active Tailwind theme and identifies which stylesheet is currently connected to the app.</p></div></div>
+        <ul class="file-list"><li><code>postcss.config.js</code></li><li><code>tailwind.config.js</code></li><li><code>src/index.css</code></li><li><code>src/App.css</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Styling views"><button class="module-tab" role="tab" aria-selected="true" data-panel="style-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="style-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="style-logic">Logical explanation</button></div>
+        <div class="module-panel" id="style-overall" role="tabpanel"><p><code>postcss.config.js</code> activates Tailwind’s PostCSS plugin and Autoprefixer. <code>tailwind.config.js</code> declares the files Tailwind scans and the project colors. <code>index.css</code> is imported by <code>main.jsx</code>, so its Tailwind import, theme tokens, and body rules apply globally. Most layout styling is written directly as Tailwind classes in JSX. <code>App.css</code> contains CSS but is not imported by the current startup path, so those rules are currently inactive.</p></div>
+        <div class="module-panel" id="style-code" role="tabpanel" hidden>
+          <h3>Load Tailwind and define theme colors</h3><div class="code-wrap"><pre><code>@import "tailwindcss";
+
+@theme {
+  --color-primary-500: #3b82f6;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+}</code></pre></div>
+          <h3>Global body defaults</h3><div class="code-wrap"><pre><code>@layer base {
+  body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: #f8fafc;
+    color: #1e293b;
+  }
+}</code></pre></div>
+        </div>
+        <div class="module-panel" id="style-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong><code>main.jsx</code> imports <code>index.css</code>.</strong><span>Vite includes it in the application bundle.</span></li><li><strong>Tailwind scans JSX class names.</strong><span>It generates styles such as <code>flex</code>, <code>md:flex-row</code>, and <code>bg-slate-900</code>.</span></li><li><strong>Base body rules apply.</strong><span>Page components then override colors and layout using utilities.</span></li><li><strong>Unimported styles produce no interface change.</strong><span><code>App.css</code> does not run merely because the file exists.</span></li></ol></div>
+      </section>
+
+      <section class="study-order">
+        <h2>Current architecture in one sentence</h2>
+        <p>React owns browser state and events, the shared Supabase client sends requests, Postgres plus RLS protects persistent rows, and a Cron-invoked Edge Function processes recurring email schedules.</p>
+        <div class="guide-links"><a href="BEGINNER_CODE_GUIDE.html">Open the concept reference</a></div>
+      </section>
+
+      <section class="lesson">
+        <p class="eyebrow">Beginner glossary</p>
+        <h2>Terms used throughout the walkthrough</h2>
+        <dl class="glossary">
+          <div><dt>Component</dt><dd>A React function that returns interface markup.</dd></div>
+          <div><dt>Prop</dt><dd>A value or callback a parent passes to a child component.</dd></div>
+          <div><dt>State</dt><dd>Component memory that can trigger another render when changed.</dd></div>
+          <div><dt>Render</dt><dd>React evaluating a component to determine what the screen should show.</dd></div>
+          <div><dt>Effect</dt><dd>Work React runs after rendering, such as loading database data.</dd></div>
+          <div><dt>Ref</dt><dd>A persistent container whose change does not itself cause a render.</dd></div>
+          <div><dt>Async</dt><dd>Work that finishes later, such as a network or database request.</dd></div>
+          <div><dt>Promise</dt><dd>An object representing a future fulfilled value or rejected error.</dd></div>
+          <div><dt>Callback</dt><dd>A function given to other code so that code can call it at the appropriate time.</dd></div>
+          <div><dt>Fulfilled</dt><dd>A Promise state meaning the asynchronous work succeeded and produced a value.</dd></div>
+          <div><dt>Rejected</dt><dd>A Promise state meaning the asynchronous work failed and produced an error.</dd></div>
+          <div><dt>Query</dt><dd>A request to read or change database rows.</dd></div>
+          <div><dt>Foreign key</dt><dd>A rule connecting a column to a valid row in another table.</dd></div>
+          <div><dt>Constraint</dt><dd>A database rule that rejects invalid data.</dd></div>
+          <div><dt>RLS</dt><dd>Row Level Security: database rules deciding which rows a user may access.</dd></div>
+          <div><dt>JWT</dt><dd>A signed token containing the user's identity and authorization claims.</dd></div>
+          <div><dt>Edge Function</dt><dd>Server-side code deployed and executed in Supabase's environment.</dd></div>
+          <div><dt>Cron</dt><dd>A schedule that invokes work at recurring times.</dd></div>
+          <div><dt>Optimistic UI</dt><dd>Updating the screen before the server confirms success, then correcting errors.</dd></div>
+        </dl>
+      </section>
+
+      <footer>AQLER Timesheet exact module walkthrough — generated from the current local source files.</footer>
+    </main>
+    <aside class="guide-assistant" data-guide-assistant hidden aria-label="Ask the guide">
+      <header>
+        <div>
+          <p class="eyebrow">Built-in learning helper</p>
+          <h2>Ask the guide</h2>
+        </div>
+        <button type="button" data-guide-assistant-close aria-label="Close Ask the guide">×</button>
+      </header>
+      <p class="assistant-intro">This searches the explanations already stored in this guide. It does not use an API, send your code anywhere, or cost anything.</p>
+      <div class="assistant-context" data-guide-assistant-context>
+        <strong>No code cell selected</strong>
+        <span>Ask about any variable, function, or syntax in the project.</span>
+      </div>
+      <div class="assistant-quick-questions" aria-label="Quick questions">
+        <button type="button" data-assistant-question="full">Full explanation</button>
+        <button type="button" data-assistant-question="purpose">What is this for?</button>
+        <button type="button" data-assistant-question="steps">Run it step by step</button>
+        <button type="button" data-assistant-question="syntax">Explain the syntax</button>
+        <button type="button" data-assistant-question="timing">When does this run?</button>
+        <button type="button" data-assistant-question="names">Explain the names</button>
+        <button type="button" data-assistant-question="website">What changes on the website?</button>
+        <button type="button" data-assistant-question="beginner">Explain like I’m new</button>
+      </div>
+      <form class="assistant-search" data-guide-assistant-form>
+        <label for="guide-assistant-question">Search the complete guide</label>
+        <div>
+          <input id="guide-assistant-question" type="search" placeholder="Try: What is activeTab for?" data-guide-assistant-input>
+          <button type="submit">Find answer</button>
+        </div>
+      </form>
+      <div class="assistant-answer" data-guide-assistant-answer aria-live="polite">
+        <p>Select <strong>? Ask</strong> on a code cell, or enter a question above.</p>
+      </div>
+    </aside>
+    <button class="back-to-top" type="button" data-back-to-top aria-label="Back to guide navigation">↑</button>
+  </body>
+</html>

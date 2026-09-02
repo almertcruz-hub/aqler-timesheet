@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "guide:generate": "node docs/generate-source-guide.mjs",
+    "guide:check": "node docs/generate-source-guide.mjs --check",
     "lint": "eslint .",
     "preview": "vite preview"
   },

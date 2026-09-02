@@ -2,8 +2,10 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-const resendApiKey = Deno.env.get('RESEND_API_KEY')!
-const resendFrom = Deno.env.get('RESEND_FROM') || 'onboarding@resend.dev'
+const brevoApiKey = Deno.env.get('BREVO_API_KEY')!
+const brevoFromEmail = Deno.env.get('BREVO_FROM_EMAIL')!
+const brevoFromName = Deno.env.get('BREVO_FROM_NAME') || 'AQLER Timesheet'
+
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 })
 
@@ -44,14 +46,29 @@ Deno.serve(async (request) => {
     if (!claimed) continue
 
     const recipient = Array.isArray(reminder.profiles) ? reminder.profiles[0] : reminder.profiles
-    const response = await fetch('https://api.resend.com/emails', {
+
+    if (!recipient?.email) {
+      const detail = 'The employee does not have an email address.'
+      await supabase
+        .from('email_reminders')
+        .update({ error: detail, last_sent_on: null })
+        .eq('id', reminder.id)
+      results.push({ id: reminder.id, status: 'failed', error: detail })
+      continue
+    }
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${resendApiKey}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'api-key': brevoApiKey,
+      },
       body: JSON.stringify({
-        from: resendFrom,
-        to: [recipient.email],
+        sender: { name: brevoFromName, email: brevoFromEmail },
+        to: [{ email: recipient.email, name: recipient.full_name || undefined }],
         subject: reminder.subject,
-        text: reminder.message,
+        textContent: reminder.message,
       }),
     })
 
@@ -61,7 +78,7 @@ Deno.serve(async (request) => {
     } else {
       const detail = await response.text()
       await supabase.from('email_reminders').update({ error: detail.slice(0, 1000), last_sent_on: null }).eq('id', reminder.id)
-      results.push({ id: reminder.id, status: 'failed' })
+      results.push({ id: reminder.id, status: 'failed', error: detail })
     }
   }
 

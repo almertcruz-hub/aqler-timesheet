@@ -13,6 +13,12 @@ function Navbar({ user, onSignOut, isAdmin = false }) {
             Employee Logs
           </Link>
         )}
+        <Link
+          to="/shifts"
+          className="hover:text-white transition"
+        >
+          Shifts
+        </Link>
         {/* <Link to="/leave-requests" className="hover:text-white transition">Leave Requests</Link>
         <Link to="/work-history" className="hover:text-white transition">Work History</Link>
         <Link to="/payslips" className="hover:text-white transition">Payslips</Link> */}

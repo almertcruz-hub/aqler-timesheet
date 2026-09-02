@@ -1,79 +1,141 @@
-function TimeButtons({ onTimeIn, onTimeOut, onRequestOvertime, onLeaveRequest, activeTimeIn, isLoading }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+import { useEffect, useState } from 'react'
+import { LogIn, LogOut } from 'lucide-react'
 
-      {/* TIME IN */}
-      <button
-        onClick={onTimeIn}
-        disabled={isLoading || !!activeTimeIn}
-        className={`${
-          isLoading || activeTimeIn
-            ? "bg-slate-700 cursor-not-allowed p-6 rounded-2xl shadow-lg text-left border border-slate-800/20"
-            : "bg-teal-600/80 hover:bg-teal-500/80 transition p-6 rounded-2xl shadow-lg text-left border border-teal-400/20"
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#09e9da">
-            <polygon points="5,3 19,12 5,21"/>
-          </svg>
-          <h3 className="text-lg font-semibold">Time In</h3>
-        </div>
-        <p className="text-green-100 text-sm mt-1">Start your work session</p>
-      </button>
+function formatElapsed(startTime, currentTime) {
+  if (!startTime) return '00:00:00'
 
-      {/* TIME OUT */}
-      <button
-        onClick={onTimeOut}
-        disabled={isLoading || !activeTimeIn}
-        className={`${
-          isLoading || !activeTimeIn
-            ? "bg-slate-700 cursor-not-allowed p-6 rounded-2xl shadow-lg text-left border border-slate-800/20"
-            : "bg-amber-600/80 hover:bg-amber-500/80 transition p-6 rounded-2xl shadow-lg text-left border border-amber-400/20"
-        }`}
-      >
-        <div className="flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="#fbbf24">
-            <rect x="4" y="4" width="16" height="16" rx="2" ry="2"/>
-          </svg>
-          <h3 className="text-lg font-semibold">Time Out</h3>
-        </div>
-        <p className="text-red-100 text-sm mt-1">End your work session</p>
-      </button>
-
-      {/* REQUEST OVERTIME */}
-      <button
-        onClick={onRequestOvertime}
-        className="bg-green-600/80 hover:bg-green-500/80 transition p-6 rounded-2xl shadow-lg text-left border border-green-400/20"
-      >
-        <div className="flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-          <h3 className="text-lg font-semibold">Request Overtime</h3>
-        </div>
-        <p className="text-green-100 text-sm mt-1">Request additional hours</p>
-      </button>
-
-      {/* LEAVE REQUEST */}
-      <button
-        onClick={onLeaveRequest}
-        className="bg-blue-600/80 hover:bg-blue-500/80 transition p-6 rounded-2xl shadow-lg text-left border border-blue-400/20"
-      >
-        <div className="flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-          </svg>
-          <h3 className="text-lg font-semibold">Request Leave</h3>
-        </div>
-        <p className="text-blue-100 text-sm mt-1">Request time off</p>
-      </button>
-
-    </div>
+  const difference = Math.max(
+    0,
+    currentTime.getTime() - startTime.getTime()
   )
+
+  const totalSeconds = Math.floor(difference / 1000)
+
+  const hours = Math.floor(totalSeconds / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+
+  return [
+    String(hours).padStart(2, '0'),
+    String(minutes).padStart(2, '0'),
+    String(seconds).padStart(2, '0')
+  ].join(':')
 }
+
+function formatCurrentTime(date) {
+    return new Intl.DateTimeFormat('en-PH', {
+      timeZone: 'Asia/Manila',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit'
+    }).format(date)
+  }
+
+function formatCurrentDate(date) {
+  return new Intl.DateTimeFormat('en-PH', {
+    timeZone: 'Asia/Manila',
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+  }).format(date)
+}
+
+function TimeButtons({
+    onTimeIn,
+    onTimeOut,
+    activeTimeIn,
+    isLoading,
+  }) {
+
+    const [currentTime, setCurrentTime] = useState(
+      () => new Date()
+    )
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setCurrentTime(new Date())
+      }, 1000)
+
+      return () => {
+        clearInterval(interval)
+      }
+    }, [])
+
+  const isWorking = Boolean(activeTimeIn)
+
+
+  return (
+    <section className="mx-auto mb-10 max-w-4xl rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/10 md:p-8">
+      <div className="flex flex-col gap-6">
+        <div className="flex gap-3 flex-col justify-between sm:flex-row sm:items-center sm:justify-between">
+          <h4 className="text-xl font-semibold uppercase tracking-widest text-slate-400">
+            Today's Timesheet
+          </h4>
+      
+          {isWorking ? (
+            <div className="flex w-fit items-center gap-2 rounded-full bg-amber-400/10 px-3 py-1.5 text-sm font-medium text-amber-300">
+              <span className="h-2 w-2 rounded-full bg-amber-300" />
+              Working
+            </div>
+          ) : (
+            <div className="flex w-fit items-center gap-2 rounded-full bg-slate-800 px-3 py-1.5 text-sm font-medium text-slate-300">
+              <span className="h-2 w-2 rounded-full bg-slate-500" />
+              Not clocked in
+            </div>
+          )}
+        </div>
+
+        <div className="py-4 text-center">
+          {isWorking ? (
+            <>
+              <p
+                className="text-5xl font-semibold tracking-tight text-white tabular-nums md:text-7xl"
+                aria-live="polite"
+              >
+                {formatElapsed(activeTimeIn, currentTime)}
+              </p>
+
+              <p className="mt-3 text-sm text-slate-400 md:text-base">
+                Started at {formatCurrentTime(activeTimeIn)}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-5xl font-semibold tracking-tight text-white md:text-7xl">
+                {formatCurrentTime(currentTime)}
+              </p>
+
+              <p className="mt-3 text-sm text-slate-400 md:text-base">
+                {formatCurrentDate(currentTime)}
+              </p>
+            </>
+          )}
+        </div>
+
+        {isWorking ? (
+          <button
+            type="button"
+            onClick={onTimeOut}
+            disabled={isLoading}
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-6 font-semibold text-white transition hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <LogOut size={19} />
+            {isLoading ? 'Please wait...' : 'Time Out'}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onTimeIn}
+            disabled={isLoading}
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-teal-600 px-6 font-semibold text-white transition hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <LogIn size={19} />
+            {isLoading ? 'Please wait...' : 'Time In'}
+          </button>
+        )}
+      </div>
+    </section>
+    )
+  }
 
 export default TimeButtons

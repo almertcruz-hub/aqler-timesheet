@@ -9,8 +9,8 @@ function Home({ session }) {
   const user = session.user
 
   const [logs, setLogs] = useState([])
-  const [activeTimeIn, setActiveTimeIn] = useState(null)
   const [activeSession, setActiveSession] = useState(null)
+  const activeTimeIn = activeSession ? new Date(activeSession.time_in) : null
 
   const [alertMessage, setAlertMessage] = useState("")
   const timerRef = useRef(null)
@@ -22,35 +22,33 @@ function Home({ session }) {
     const fetchData = async () => {
       setIsLoading(true)
 
-      // logs
-      const { data: logsData } = await supabase
+      const { data, error } = await supabase
         .from('logs')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
+        .order('time_in', { ascending: false })
 
-      if (logsData) setLogs(logsData)
-
-      // active session (ONLY ONE allowed)
-      const { data: sessionData } = await supabase
-        .from('active_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .is('time_out', null)
-        .maybeSingle()
-
-      setActiveSession(sessionData)
-
-      if (sessionData) {
-        setActiveTimeIn(new Date(sessionData.time_in))
-      } else {
-        setActiveTimeIn(null)
+      if (error) {
+        showAlert(`Unable to load work logs: ${error.message}`)
+        setLogs( [] )
+        setActiveSession(null)
+        setIsLoading(false)
+        return
       }
 
+      const loadedLogs = data || []
+
+      const openSession = loadedLogs.find(
+        (log) => log.time_out === null
+      )
+      
+      setLogs(loadedLogs)
+      setActiveSession(openSession || null)
       setIsLoading(false)
     }
 
     fetchData()
+
   }, [user.id])
 
   // ---------------- ALERT ----------------
@@ -65,44 +63,44 @@ function Home({ session }) {
 
   // Time In Handler
   const timeIn = async () => {
-    if (isLoading || activeSession) {
+    if (isLoading || activeSession || isProcessingRef.current) {
       showAlert("You are already timed in!")
       return
     }
 
+    isProcessingRef.current = true
+
     const now = new Date()
 
-    setActiveTimeIn(now)
-    showAlert("Timed in at " + now.toLocaleTimeString())
-
-    const { error, data } = await supabase
-      .from('active_sessions')
-      .insert({
-        user_id: user.id,
-        time_in: now.toISOString()
-      })
-      .select()
-
-    if (error) {
-      showAlert("Failed to time in - you already have an active session. Kindly refresh the page.")
-      setActiveTimeIn(null)
-      return
-    }
-
-    setActiveSession(data?.[0] || null)
-
-    // log
-    const { data: logData } = await supabase
+    const { data: newLog, error } = await supabase
       .from('logs')
       .insert({
         user_id: user.id,
-        type: "IN",
-        time: now.toLocaleTimeString(),
-        date: now.toLocaleDateString()
+        time_in: now.toISOString(),
       })
       .select()
+      .single()
 
-    if (logData) setLogs(prev => [logData[0], ...prev])
+
+    if (error) {
+      showAlert(`Failed to time in: ${error.message}`)
+      isProcessingRef.current = false
+      return
+    }
+
+    setActiveSession(newLog)
+
+    setLogs((currentLogs) => [
+      newLog,
+      ...currentLogs,
+    ])
+
+    showAlert(
+      `Timed in at ${now.toLocaleTimeString()}`
+    )
+
+    isProcessingRef.current = false
+
   }
 
   // ---------------- TIME OUT ----------------
@@ -114,53 +112,52 @@ function Home({ session }) {
 
     isProcessingRef.current = true
 
-    const savedSession = activeSession
-
-    setActiveSession(null)
-    setActiveTimeIn(null)
-
     const now = new Date()
-    const savedTimeIn = new Date(savedSession.time_in)
-    const hours = ((now - savedTimeIn) / (1000 * 60 * 60)).toFixed(2)
-    showAlert("Timed out at " + now.toLocaleTimeString() + ` (Duration: ${hours} hours)`)
 
-    const { error, data: updatedData } = await supabase
-      .from('active_sessions')
-      .update({ time_out: now.toISOString() })
-      .eq('id', savedSession.id)
-      .is('time_out', null)  
-      .select()
-
-    if (error || !updatedData || updatedData.length === 0) {
-      showAlert("Session already ended. Please refresh.")
-      isProcessingRef.current = false
-      return
-    }
-
-    const { data: logData } = await supabase
+    const { data: completedLog, error} = await supabase
       .from('logs')
-      .insert({
-        user_id: user.id,
-        type: "OUT",
-        time: now.toLocaleTimeString(),
-        date: now.toLocaleDateString(),
-        duration: hours
+      .update({
+        time_out: now.toISOString()
       })
+      .eq('id', activeSession.id)
+      .eq('user_id', user.id)
+      .is('time_out', null)
       .select()
+      .maybeSingle()
 
-    if (logData) setLogs(prev => [logData[0], ...prev])
+      if (error || !completedLog) {
+        showAlert(
+          error
+          ? `Unable to time out: ${error.message}`
+          : 'Session already ended. Please refresh.'
+        )
 
-    isProcessingRef.current = false 
+        isProcessingRef.current = false 
+        return
+      }
+
+      const startTime = new Date(completedLog.time_in)
+
+      const durationHours = (now - startTime) / (1000 * 60 * 60)
+
+      setLogs((currentLogs) =>
+        currentLogs.map((log) =>
+          log.id === completedLog.id
+            ? completedLog
+            : log
+        )
+      )
+
+      setActiveSession(null)
+
+      showAlert(
+        `Timed out at ${now.toLocaleTimeString()} ` +
+        `(${durationHours.toFixed(2)} hours)`
+      )
+      
+      isProcessingRef.current = false
   }
 
-
-  const requestOvertime = () => {
-    showAlert("Under development :)")
-  }
-
-  const requestLeave = () => {
-    showAlert("Not functional yet :)")
-  }
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -190,8 +187,6 @@ function Home({ session }) {
           isLoading={isLoading}
           onTimeIn={timeIn}
           onTimeOut={timeOut}
-          onRequestOvertime={requestOvertime}
-          onLeaveRequest={requestLeave}
           activeTimeIn={activeTimeIn}
         />
 
