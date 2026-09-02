@@ -18,6 +18,7 @@ function createEmptyBaseline() {
     enabled: false,
     startTime: '09:00',
     endTime: '17:00',
+    overnight: false,
     notes: '',
     shiftId: null,
   }))
@@ -73,23 +74,29 @@ function buildWeekSchedule(weekStart, baseline, overrides) {
     )
 
     if (override) {
+      const startTime = override.start_time
+        ? override.start_time.slice(0, 5)
+        : baselineDay?.startTime || '09:00'
+      const endTime = override.end_time
+        ? override.end_time.slice(0, 5)
+        : baselineDay?.endTime || '17:00'
+
       return {
         date: dateString,
         dayOfWeek: weekday.value,
         dayLabel: weekday.label,
         dayShort: weekday.short,
         mode: override.is_day_off ? 'off' : 'custom',
-        startTime: override.start_time
-          ? override.start_time.slice(0, 5)
-          : baselineDay?.startTime || '09:00',
-        endTime: override.end_time
-          ? override.end_time.slice(0, 5)
-          : baselineDay?.endTime || '17:00',
+        startTime,
+        endTime,
+        overnight:
+          !override.is_day_off && endTime < startTime,
         notes: override.notes || '',
         overrideId: override.id,
         baselineEnabled: baselineDay?.enabled || false,
         baselineStartTime: baselineDay?.startTime || null,
         baselineEndTime: baselineDay?.endTime || null,
+        baselineOvernight: baselineDay?.overnight || false,
       }
     }
 
@@ -101,13 +108,31 @@ function buildWeekSchedule(weekStart, baseline, overrides) {
       mode: 'baseline',
       startTime: baselineDay?.startTime || '09:00',
       endTime: baselineDay?.endTime || '17:00',
+      overnight: baselineDay?.overnight || false,
       notes: '',
       overrideId: null,
       baselineEnabled: baselineDay?.enabled || false,
       baselineStartTime: baselineDay?.startTime || null,
       baselineEndTime: baselineDay?.endTime || null,
+      baselineOvernight: baselineDay?.overnight || false,
     }
   })
+}
+
+function hasInvalidShiftTimes(startTime, endTime, overnight) {
+  if (!startTime || !endTime) {
+    return true
+  }
+
+  if (startTime === endTime) {
+    return true
+  }
+
+  if (overnight) {
+    return endTime >= startTime
+  }
+
+  return endTime <= startTime
 }
 
 function Shift({ session }) {
@@ -142,6 +167,9 @@ function Shift({ session }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+
+  const [baselineOvernight, setBaselineOvernight] = useState(false)
+  const [overrideOvernight, setOverrideOvernight] = useState(false)
 
   useEffect(() => {
     if (!isAdmin) return
@@ -232,11 +260,15 @@ function Shift({ session }) {
 
       if (!savedDay) return day
 
+      const startTime = savedDay.start_time.slice(0,5)
+      const endTime = savedDay.end_time.slice(0,5)
+
       return {
         dayOfWeek: day.dayOfWeek,
         enabled: true,
-        startTime: savedDay.start_time.slice(0, 5),
-        endTime: savedDay.end_time.slice(0, 5),
+        startTime,
+        endTime,
+        overnight: endTime < startTime,
         notes: savedDay.notes || '',
         shiftId: savedDay.id,
       }
@@ -273,13 +305,18 @@ function Shift({ session }) {
     }
 
     if (
-      !baselineStartTime ||
-      !baselineEndTime ||
-      baselineEndTime <= baselineStartTime
+      hasInvalidShiftTimes(
+        baselineStartTime,
+        baselineEndTime,
+        baselineOvernight
+      )
     ) {
       setMessage(
-        'The baseline end time must be later than the start time.'
+        baselineOvernight
+          ? 'For an overnight shift, the end time must be earlier than the start time.'
+          : 'For a same-day shift, the end time must be later than the start time.'
       )
+
       return
     }
 
@@ -291,6 +328,7 @@ function Shift({ session }) {
               enabled: true,
               startTime: baselineStartTime,
               endTime: baselineEndTime,
+              overnight: baselineOvernight,
             }
           : day
       )
@@ -322,9 +360,11 @@ function Shift({ session }) {
     const invalidDay = baseline.find(
       (day) =>
         day.enabled &&
-        (!day.startTime ||
-          !day.endTime ||
-          day.endTime <= day.startTime)
+        hasInvalidShiftTimes(
+          day.startTime,
+          day.endTime,
+          day.overnight
+        )
     )
 
     if (invalidDay) {
@@ -333,8 +373,11 @@ function Shift({ session }) {
       )
 
       setMessage(
-        `${weekday.label}: the end time must be later than the start time.`
+        invalidDay.overnight
+          ? `${weekday.label}: for an overnight shift, the end time must be earlier than the start time.`
+          : `${weekday.label}: for a same-day shift, the end time must be later than the start time.`
       )
+
       return
     }
 
@@ -416,16 +459,20 @@ function Shift({ session }) {
     }
 
     if (
-      !overrideStartTime ||
-      !overrideEndTime ||
-      overrideEndTime <= overrideStartTime
+      hasInvalidShiftTimes(
+        overrideStartTime,
+        overrideEndTime,
+        overrideOvernight
+      )
     ) {
       setMessage(
-        'The custom end time must be later than the start time.'
+        overrideOvernight
+          ? 'For an overnight shift, the end time must be earlier than the start time.'
+          : 'For a same-day shift, the end time must be later than the start time.'
       )
+
       return
     }
-
     setWeekSchedule((currentSchedule) =>
       currentSchedule.map((day) =>
         selectedOverrideDates.includes(day.date)
@@ -434,6 +481,7 @@ function Shift({ session }) {
               mode: 'custom',
               startTime: overrideStartTime,
               endTime: overrideEndTime,
+              overnight: overrideOvernight,
             }
           : day
       )
@@ -457,6 +505,10 @@ function Shift({ session }) {
               day.baselineStartTime || day.startTime || '09:00',
             endTime:
               day.baselineEndTime || day.endTime || '17:00',
+            overnight:
+              day.baselineEnabled
+                ? day.baselineOvernight
+                : day.overnight || false,
           }
         }
 
@@ -476,16 +528,22 @@ function Shift({ session }) {
     const invalidDay = weekSchedule.find(
       (day) =>
         day.mode === 'custom' &&
-        (!day.startTime ||
-          !day.endTime ||
-          day.endTime <= day.startTime)
+        hasInvalidShiftTimes(
+          day.startTime,
+          day.endTime,
+          day.overnight
+        )
     )
 
     if (invalidDay) {
       setMessage(
-        `${invalidDay.dayLabel}, ${formatDate(
-          invalidDay.date
-        )}: the end time must be later than the start time.`
+        invalidDay.overnight
+          ? `${invalidDay.dayLabel}, ${formatDate(
+              invalidDay.date
+            )}: for an overnight shift, the end time must be earlier than the start time.`
+          : `${invalidDay.dayLabel}, ${formatDate(
+              invalidDay.date
+            )}: for a same-day shift, the end time must be later than the start time.`
       )
       return
     }
@@ -724,7 +782,7 @@ function Shift({ session }) {
                     })}
                   </div>
 
-                  <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] lg:items-end">
                     <label className="text-sm text-slate-300">
                       Start time
 
@@ -753,6 +811,24 @@ function Shift({ session }) {
                         }
                         className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
                       />
+                    </label>
+
+                    <label className="flex h-10 w-fit items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-slate-300">
+                      <input
+                        type="checkbox"
+                        checked={baselineOvernight}
+                        onChange={(event) => {
+                          setBaselineOvernight(event.target.checked)
+                        }}
+                        className="h-4 w-4 accent-blue-500"
+                      />
+
+                      <span>
+                        <span className="block text-sm font-medium text-white">
+                          Shift ends next day
+                        </span>
+
+                      </span>
                     </label>
 
                     <button
@@ -796,7 +872,7 @@ function Shift({ session }) {
                           </label>
 
                           {day.enabled ? (
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                               <label className="text-sm text-slate-300">
                                 Start
 
@@ -847,6 +923,27 @@ function Shift({ session }) {
                                   className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
                                 />
                               </label>
+
+                              <label className="mt-6 flex h-10 w-fit items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-slate-300">
+                                <input
+                                  type="checkbox"
+                                  checked={day.overnight}
+                                  onChange={(event) => {
+                                    updateBaselineDay(
+                                      day.dayOfWeek,
+                                      'overnight',
+                                      event.target.checked
+                                    )
+                                  }}
+                                  className="h-4 w-4 accent-blue-500"
+                                />
+
+                                <span className="block text-sm font-medium text-white">
+                                    Ends next day
+                                </span>
+
+                              </label>
+
                             </div>
                           ) : (
                             <p className="text-sm text-slate-500">
@@ -945,7 +1042,7 @@ function Shift({ session }) {
                       })}
                     </div>
 
-                    <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+                    <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] lg:items-end">
                       <label className="text-sm text-slate-300">
                         Start time
 
@@ -976,6 +1073,21 @@ function Shift({ session }) {
                         />
                       </label>
 
+                      <label className="flex h-10 w-fit items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={overrideOvernight}
+                          onChange={(event) => {
+                            setOverrideOvernight(
+                              event.target.checked
+                            )
+                          }}
+                          className="h-4 w-4 accent-blue-500"
+                        />
+
+                        <span>Ends next day</span>
+                      </label>
+
                       <button
                         type="button"
                         onClick={applyOverrideTime}
@@ -1003,6 +1115,11 @@ function Shift({ session }) {
                       day.mode === 'custom'
                         ? day.endTime
                         : day.baselineEndTime
+
+                    const effectiveOvernight =
+                      day.mode === 'custom'
+                        ? day.overnight
+                        : day.baselineOvernight
 
                     return (
                       <section
@@ -1051,7 +1168,7 @@ function Shift({ session }) {
                               </label>
 
                               {day.mode === 'custom' && (
-                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                                   <label className="text-sm text-slate-300">
                                     Start
 
@@ -1102,13 +1219,30 @@ function Shift({ session }) {
                                       className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
                                     />
                                   </label>
+
+                                  <label className="mt-6 flex h-10 w-fit items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-slate-300">
+                                    <input
+                                      type="checkbox"
+                                      checked={day.overnight || false}
+                                      onChange={(event) => {
+                                        updateWeekDay(
+                                          day.date,
+                                          'overnight',
+                                          event.target.checked
+                                        )
+                                      }}
+                                      className="h-4 w-4 accent-blue-500"
+                                    />
+
+                                    <span>Ends next day</span>
+                                </label>
                                 </div>
                               )}
 
                               {day.mode === 'baseline' && (
                                 <div className="flex items-center text-sm text-slate-400">
                                   {day.baselineEnabled
-                                    ? `${day.baselineStartTime} – ${day.baselineEndTime} from baseline`
+                                    ? `${day.baselineStartTime} – ${day.baselineEndTime}${day.baselineOvernight ? ' (+1 day)' : ''} from baseline`
                                     : 'Day off from baseline'}
                                 </div>
                               )}
@@ -1128,6 +1262,11 @@ function Shift({ session }) {
                               ) : (
                                 <p className="font-medium text-slate-200">
                                   {effectiveStart} – {effectiveEnd}
+                                  {effectiveOvernight && (
+                                    <span className="ml-2 text-blue-400">
+                                      +1 day
+                                    </span>
+                                  )}
                                 </p>
                               )}
 
