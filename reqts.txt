@@ -1,0 +1,11 @@
+- Export functionality should be one row for time in and time out, date should be shift date. Time in and time out will be datetime format.
+- Shift table adjustments policies are done sql
+- Shift schedule will be on date level
+- Retention logs for shift schedule - 60 days before, 30 days after
+- Retention logs for work logs - 6 months 180days* 2 entries per day * 14 employees
+
+- Add payroll concern button - forms add as new module
+Fields: Shift date, refer to file
+
+- Change export format, change datetime format time in time out, then add scheduled shift time in and time out and notes, add logic for late 1 min.
+-change reminders to multiple recurrences per email
