@@ -97,8 +97,7 @@ function buildWeekSchedule(weekStart, baseline, overrides) {
         mode: override.is_day_off ? 'off' : 'custom',
         startTime,
         endTime,
-        overnight:
-          !override.is_day_off && endTime < startTime,
+        overnight: Boolean(override.is_overnight),
         notes: override.notes || '',
         overrideId: override.id,
         baselineEnabled: baselineDay?.enabled || false,
@@ -229,6 +228,7 @@ function Shift({ session }) {
           day_of_week,
           start_time,
           end_time,
+          is_overnight,
           notes
         `)
         .eq('user_id', selectedEmployeeId)
@@ -242,6 +242,7 @@ function Shift({ session }) {
           shift_date,
           start_time,
           end_time,
+          is_overnight,
           is_day_off,
           notes
         `)
@@ -276,11 +277,11 @@ function Shift({ session }) {
       return {
         dayOfWeek: day.dayOfWeek,
         enabled: true,
-        startTime: savedDay.start_time.slice(0, 5),
-        endTime: savedDay.end_time.slice(0, 5),
+        startTime,
+        endTime,
         notes: savedDay.notes || '',
         shiftId: savedDay.id,
-        overnight: endTime < startTime,
+        overnight: Boolean(savedDay.is_overnight),
       }
     })
 
@@ -401,6 +402,7 @@ function Shift({ session }) {
         day_of_week: day.dayOfWeek,
         start_time: day.startTime,
         end_time: day.endTime,
+        is_overnight: Boolean(day.overnight),
         notes: day.notes.trim() || null,
       }))
 
@@ -565,6 +567,10 @@ function Shift({ session }) {
           day.mode === 'custom' ? day.startTime : null,
         end_time:
           day.mode === 'custom' ? day.endTime : null,
+        is_overnight:
+          day.mode === 'custom'
+            ? Boolean(day.overnight)
+            : false,
         is_day_off: day.mode === 'off',
         notes: day.notes.trim() || null,
       }))
