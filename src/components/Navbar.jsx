@@ -10,7 +10,7 @@ function Navbar({ user, onSignOut, isAdmin = false }) {
         <Link to="/" className="hover:text-white transition">My Timesheet</Link>
         {isAdmin && (
           <Link to="/admin" className="text-blue-300 hover:text-blue-200 transition">
-            Employee Logs
+            Admin Dashboard
           </Link>
         )}
         <Link

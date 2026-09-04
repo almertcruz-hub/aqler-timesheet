@@ -68,19 +68,33 @@ function TimeButtons({
     <section className="mx-auto mb-10 max-w-4xl rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/10 md:p-8">
       <div className="flex flex-col gap-6">
         <div className="flex gap-3 flex-col justify-between sm:flex-row sm:items-center sm:justify-between">
-          <h4 className="text-xl font-semibold uppercase tracking-widest text-slate-400">
-            Today's Timesheet
-          </h4>
+          <div>
+
+            <h4 className="text-xl font-semibold uppercase tracking-widest text-slate-400">
+              Today's Timesheet
+            </h4>
+
+            <p className="mt-1 text-m text-slate-400">
+              {formatCurrentDate(currentTime)}
+            </p>
+
+          </div>
       
           {isWorking ? (
-            <div className="flex w-fit items-center gap-2 rounded-full bg-amber-400/10 px-3 py-1.5 text-sm font-medium text-amber-300">
-              <span className="h-2 w-2 rounded-full bg-amber-300" />
-              Working
+            <div 
+              role="status"
+              className="flex w-fit items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-sm font-semibold text-emerald-300">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="relative inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-40" />
+                  
+                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+              </span>
+              Clocked In
             </div>
           ) : (
             <div className="flex w-fit items-center gap-2 rounded-full bg-slate-800 px-3 py-1.5 text-sm font-medium text-slate-300">
               <span className="h-2 w-2 rounded-full bg-slate-500" />
-              Not clocked in
+              Not Clocked In
             </div>
           )}
         </div>
