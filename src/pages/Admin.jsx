@@ -8,8 +8,8 @@ const WEEKDAYS = [
   { value: 3, short: 'W', label: 'Wednesday' },
   { value: 4, short: 'T', label: 'Thursday' },
   { value: 5, short: 'F', label: 'Friday' },
-  { value: 6, short: 'S', label: 'Saturday' },
-  { value: 0, short: 'S', label: 'Sunday' },
+  { value: 6, short: 'Sa', label: 'Saturday' },
+  { value: 0, short: 'Su', label: 'Sunday' },
 ]
 
 const PAGE_SIZE = 20
