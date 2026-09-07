@@ -733,10 +733,10 @@ function websiteEffectFor(moduleId, chunk) {
   if (/getSession|onAuthStateChange/.test(code)) return 'This decides whether the app shows protected pages for the signed-in person or sends them to the login page.'
   if (/signInWithPassword/.test(code)) return 'Submitting the login form asks Supabase to verify the credentials; success opens the protected app and failure displays an error.'
   if (/signUp\(/.test(code)) return 'Submitting registration creates the Supabase Auth user when the form is valid, then the page displays the resulting status.'
-  if (/timeIn|active_sessions/.test(code) && /insert|select/.test(code)) return 'This starts or restores the employee’s open work session, changing the timekeeping controls visible on the home page.'
-  if (/timeOut|\.from\('logs'\)/.test(code) && /insert|update/.test(code)) return 'This finishes the open session, stores the completed work log, and refreshes what the employee sees.'
-  if (/exportLogs|Blob|createObjectURL/.test(code)) return 'Clicking Export CSV turns the currently filtered work logs into a downloadable spreadsheet-compatible file.'
-  if (/filteredLogs|search/.test(code) && /useMemo|filter/.test(code)) return 'Typing in the administrator search box recalculates which employee-log rows appear and which rows the CSV export uses.'
+  if (/timeIn|activeSession/.test(code) && /insert|select/.test(code)) return 'This starts or restores the employee’s open logs row. A null time_out changes the home controls to the working state.'
+  if (/timeOut|\.from\('logs'\)/.test(code) && /update/.test(code)) return 'This finishes the same open logs row by adding time_out, then refreshes what the employee sees.'
+  if (/exportLogs|Blob|createObjectURL/.test(code)) return 'Clicking Export CSV runs a separate batched query for every current search match, then creates a spreadsheet-compatible download independent of the visible page.'
+  if (/debouncedSearch|refreshNumber|\.range\(/.test(code) && /admin_work_logs|fetchLogs/.test(code)) return 'A settled search, page change, or Refresh sends a new paginated reporting-view query and updates only the current table page.'
   if (/email_reminders/.test(code) && /insert|delete|upsert/.test(code)) return 'The administrator’s reminder form creates or removes an active scheduled-email row, and the visible schedule list is updated.'
   if (/Deno\.serve|api\.brevo|process-email-reminders/.test(code)) return 'This runs behind the website when Cron calls the Edge Function; due reminders are emailed and their delivery result is recorded.'
   if (/create policy|row level security|auth\.uid|auth\.jwt/i.test(code)) return 'Nothing new is drawn, but the database uses this rule to permit the correct employee or administrator request and reject unauthorized access.'
@@ -789,7 +789,7 @@ const flowVisualConfig = {
   },
   shifts: {
     image: 'assets/ui/shift-scheduler.svg',
-    overview: 'Use the numbered regions in this picture while following the Shift flow. The code below progressively supplies the employee, tab, weekday editor, and effective schedule cards.',
+    overview: 'Use the numbered regions in this picture while following the Shift flow. The code supplies the employee, tab, weekday editor, effective schedule cards, overnight checkboxes, day-off notes, and +1 day labels.',
   },
   database: {
     image: 'assets/ui/admin-dashboard.svg',
@@ -811,7 +811,8 @@ function flowAppearanceCaption(moduleId, chunk) {
     if (/activeTab|baseline|specific|week/.test(code)) return 'Look at the top tabs and the large workspace underneath them. activeTab decides which of those workspaces is present.'
     if (/selectedEmployee|employee/.test(code)) return 'Look at the employee selector near the top. Its current value decides whose weekday controls and schedule cards are filled.'
     if (/WEEKDAYS\.map|baselineDays|selectedDays/.test(code)) return 'Look at the seven weekday controls. map repeats one piece of JSX for Monday through Sunday, while state decides each day’s selected appearance.'
-    if (/weekSchedule\.map|shift_date|dateString/.test(code)) return 'Look at the seven dated schedule cards. This rendering code turns the calculated weekSchedule array into those repeated cards.'
+    if (/overnight|is_overnight/.test(code)) return 'Look for the Overnight checkbox and the +1 day label. The checkbox controls a Boolean on the day object; saving writes it as is_overnight, and rendering uses it to explain that the end belongs to tomorrow.'
+    if (/weekSchedule\.map|shift_date|dateString/.test(code)) return 'Look at the seven dated schedule cards. This rendering code turns the calculated weekSchedule array into repeated cards with their mode, times, optional note, and overnight status.'
     return 'This block contributes to the numbered Shift interface shown here. Match its visible text, button, input, or className with the same item in the picture.'
   }
   if (moduleId === 'auth') {
@@ -1077,10 +1078,10 @@ const uiLessonConfig = {
   navbar: { title: 'Shared navigation and signed-in identity', intro: 'Navbar.jsx creates the top bar, route links, the email/avatar badge, the administrator label, and the sign-out action. Flexbox places the immediate children in a row until responsive rules wrap or constrain them.', images: [['assets/ui/employee-dashboard.svg', 'Annotated employee interface showing where the shared Navbar sits.']] },
   timekeeping: { title: 'Employee time controls and status feedback', intro: 'React state decides whether Time In or Time Out is available, whether an operation is loading, and what feedback appears. The JSX describes both possible states; conditions choose which one reaches the DOM.', images: [['assets/ui/employee-dashboard.svg', 'Annotated employee dashboard with the state-driven time controls.']] },
   worklog: { title: 'Repeated work-log rows', intro: 'The table structure is stable, but its body is data-driven. map visits the current log list and returns one row for each item. Responsive wrappers prevent the table from breaking the page on narrow screens.', images: [['assets/ui/employee-dashboard.svg', 'Annotated employee dashboard showing the work-log region produced from rows.']] },
-  adminlogs: { title: 'Administrator search, export, and employee table', intro: 'The page combines a heading, controlled search field, export action, and a table created from filteredLogs. Layout classes move controls between stacked and horizontal arrangements as screen width changes.', images: [['assets/ui/admin-dashboard.svg', 'Annotated administrator logs and reminder interface.']] },
+  adminlogs: { title: 'Administrator server search, pagination, export, and employee table', intro: 'The page combines a controlled search field, 400 ms debounce, 20-row server page, manual refresh, and a separate batched all-results export. Layout classes move controls between stacked and horizontal arrangements as screen width changes.', images: [['assets/ui/admin-dashboard.svg', 'Annotated administrator logs and reminder interface.']] },
   reminders: { title: 'Recurring-email form and active schedule list', intro: 'Form state fills the employee, weekday, time, and message controls. Active reminder rows are rendered as cards with a row-specific cancel action and loading state.', images: [['assets/ui/admin-dashboard.svg', 'Annotated administrator interface showing reminder creation and active schedules.']] },
   processor: { title: 'Server behavior behind the reminder UI', intro: 'The Edge Function has no direct JSX. The administrator sees its results indirectly when reminder rows gain sent or error information. The picture shows the screen that relies on this background work.', images: [['assets/ui/admin-dashboard.svg', 'The visible administrator UI supported by the invisible email processor.']] },
-  shifts: { title: 'Recurring shifts, exact-date overrides, and employee preview', intro: 'Shift.jsx uses tabs, employee selection, weekday buttons, time inputs, week navigation, and seven repeated date cards. State chooses the current employee, tab, week, selections, and edited schedule values.', images: [['assets/ui/shift-scheduler.svg', 'Annotated administrator Shift scheduler showing the major visual regions and the state that controls them.']] },
+  shifts: { title: 'Recurring shifts, exact-date overrides, overnight work, and employee preview', intro: 'Shift.jsx uses tabs, employee selection, weekday/date buttons, time inputs, overnight checkboxes, notes, week navigation, and seven repeated date cards. State chooses the current employee, tab, week, selections, and edited schedule values; Supabase stores overnight explicitly.', images: [['assets/ui/shift-scheduler.svg', 'Annotated administrator Shift scheduler showing the major visual regions and the state that controls them.']] },
   database: { title: 'Database rules behind every visible screen', intro: 'SQL does not create browser elements. It determines which rows the JSX is allowed to receive. When RLS rejects a request, React shows an error or empty state instead of protected information.', images: [['assets/ui/admin-dashboard.svg', 'The administrator UI can show cross-employee rows only because its database policies allow them.'], ['assets/ui/employee-dashboard.svg', 'The employee UI receives only that employee’s permitted rows.']] },
   styling: { title: 'Global CSS, Tailwind utilities, and responsive changes', intro: 'index.css establishes page-wide defaults. Tailwind classes written in JSX create most component styling. Prefixes such as sm:, md:, and lg: apply a utility only at or above that breakpoint.', images: [['assets/ui/login-desktop.png', 'Desktop layout produced from the same authentication JSX.'], ['assets/ui/login-mobile.png', 'Mobile layout after the viewport becomes narrower.'], ['assets/ui/shift-scheduler.svg', 'Annotated complex layout using flex, grid, gaps, borders, colors, and responsive wrapping.']] },
 }
@@ -1163,7 +1164,7 @@ function renderUiGuide(moduleId, panel) {
       + (/on(Click|Change|Submit)=/.test(chunk.code) ? 6 : 0)
       + (/\.(map|filter)\(/.test(chunk.code) ? 4 : 0)
       + (/md:|sm:|lg:/.test(chunk.code) ? 5 : 0)
-      + (/weekSchedule\.map|filteredLogs\.map|reminders\.map|logs\.map|WEEKDAYS\.map/.test(chunk.code) ? 15 : 0)
+      + (/weekSchedule\.map|exportedLogs\.map|reminders\.map|logs\.map|WEEKDAYS\.map/.test(chunk.code) ? 15 : 0)
       + (/selectedEmployeeId|activeTab/.test(chunk.code) ? 8 : 0),
   }))
   const selected = scored.sort((a, b) => b.uiScore - a.uiScore || a.sourceOrder - b.sourceOrder).slice(0, 8).sort((a, b) => a.sourceOrder - b.sourceOrder)
@@ -1933,14 +1934,14 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     timekeeping: {
       before: 'Review state, refs, async/await, and database inserts.',
-      outcome: 'Trace Time In and Time Out through state, active_sessions, and logs.',
-      model: 'active_sessions is the current open job; logs is the permanent activity history.',
-      mistake: 'Updating React state first makes the UI feel fast, but every database error path must restore consistent state.',
-      question: 'Why are both a React guard and a unique database index used against duplicate Time In?',
-      answer: 'The React guard gives fast feedback, but two clicks or browser requests can race. The unique index is the final server-side guarantee that only one open session exists.',
+      outcome: 'Trace Time In and Time Out through one work-session row in logs.',
+      model: 'One logs row is one time card: time_out null means open; a time_out timestamp means completed.',
+      mistake: 'A React state guard alone is not a database-wide guarantee. Two tabs can still race, so the database should also enforce one open logs row per employee.',
+      question: 'Why does Time Out update the active row instead of inserting another row?',
+      answer: 'Time In and Time Out describe the same work session. Keeping them in one row gives the admin one table row with shift date, both timestamps, duration, and status.',
       inputs: 'Signed-in user, current time, loaded logs, and current active session.',
-      work: 'Guard clicks, write the session, calculate duration, and write logs.',
-      outputs: 'Updated active session, IN/OUT rows, buttons, and alert message.',
+      work: 'Guard clicks, insert an open logs row, update that same row at Time Out, and calculate display duration.',
+      outputs: 'One updated session row, working controls, work-log cards, and an alert message.',
       next: 'WorkLog receives the updated logs array.',
     },
     worklog: {
@@ -1951,20 +1952,20 @@ document.addEventListener('DOMContentLoaded', () => {
       question: 'What happens to the original logs array when visibleLogs uses slice(0, limit)?',
       answer: 'Nothing. slice returns a new array containing the selected positions and leaves logs unchanged.',
       inputs: 'The employee logs array passed by Home.',
-      work: 'Slice visible rows, format duration, and classify completeness.',
+      work: 'Slice visible rows, detect a null Time Out, and calculate elapsed hours/minutes for completed rows.',
       outputs: 'Rendered log cards and Show more/Show less controls.',
       next: 'No next module; this is the employee-facing display result.',
     },
     adminlogs: {
-      before: 'Review useMemo, filter, map, nested profile data, and browser Blob APIs.',
-      outcome: 'Explain search and CSV export, including why they may slow down at scale.',
-      model: 'One downloaded master list feeds two views: the table and the exported file.',
-      mistake: 'Because all logs are loaded first, search and export are limited by browser memory and initial query size. This is not server-side pagination.',
-      question: 'Why do the table and exported CSV always use the same search result?',
-      answer: 'Both read filteredLogs. useMemo creates that array from the current logs and search values, so both consumers share the same derived data.',
-      inputs: 'Admin session plus logs joined to employee profiles.',
-      work: 'Filter in memory, format values, render rows, and construct CSV.',
-      outputs: 'Searchable admin table or downloaded CSV file.',
+      before: 'Review useEffect dependencies, debounce timers, database range/count, loops, map, and browser Blob APIs.',
+      outcome: 'Explain why the table is paginated on the server while export intentionally uses its own all-results query.',
+      model: 'The screen borrows one 20-row page; Export separately collects every matching row in boxes of 1,000.',
+      mistake: 'Exporting the current logs state would export only the visible page. The separate batched query is necessary for a complete file.',
+      question: 'What causes the administrator log SQL query to run again?',
+      answer: 'The fetch effect depends on page, debouncedSearch, and refreshNumber. Previous/Next changes page, paused typing changes debouncedSearch, and Refresh increments refreshNumber.',
+      inputs: 'Admin session, current page, settled search text, and refresh counter.',
+      work: 'Filter and paginate in Postgres, render one page, or independently fetch all matches and construct CSV.',
+      outputs: 'A 20-row searchable table with exact page count or a complete downloaded CSV file.',
       next: 'The browser download system receives the temporary Blob URL.',
     },
     reminders: {
@@ -1993,13 +1994,13 @@ document.addEventListener('DOMContentLoaded', () => {
     },
     shifts: {
       before: 'Review arrays, map, find, controlled inputs, useEffect, useCallback, upsert, and RLS.',
-      outcome: 'Explain how one page edits a recurring weekly baseline and overlays exceptions for exact dates.',
-      model: 'The baseline is the normal weekly template; an override is a sticky note placed on one calendar date and read first.',
-      mistake: 'The two tables do not merge automatically. React must load both, prefer an exact-date override, and fall back to the matching weekday baseline.',
-      question: 'Why does choosing Use baseline delete an override instead of inserting another row?',
-      answer: 'No override row means fall back to shifts. Deleting the exception restores that normal behavior and avoids storing duplicate weekly data for every date.',
+      outcome: 'Explain how one page edits a recurring weekly baseline, overlays exact-date exceptions, and carries overnight status from checkbox to database to +1 day display.',
+      model: 'The baseline is the normal weekly template; an override is a sticky note placed on one calendar date and read first. Overnight is a saved yes/no property on either kind of working row.',
+      mistake: 'The tables do not merge automatically, and overnight should not be guessed merely from the clock order. React loads both, applies override-first priority, and copies the saved is_overnight value.',
+      question: 'How does overrideOvernight reach Supabase?',
+      answer: 'Apply custom times copies overrideOvernight into day.overnight for selected dates. Save this week maps that day to a row and writes Boolean(day.overnight) into is_overnight.',
       inputs: 'Signed-in session, selected employee, displayed week, recurring weekday rows, and exact-date override rows.',
-      work: 'Load both tables, build seven effective dates, edit controlled fields, validate times, upsert changes, and delete rows that mean day off or baseline restoration.',
+      work: 'Load both tables, build seven effective dates, edit bulk or individual controls, validate times, save explicit overnight/day-off/note values, and delete rows that mean baseline restoration.',
       outputs: 'An admin editor or employee read-only week, plus durable rows in shifts and shift_overrides.',
       next: 'The rendered employee week uses the override-first result; Supabase RLS remains the real authorization boundary.',
     },
@@ -2049,10 +2050,10 @@ document.addEventListener('DOMContentLoaded', () => {
       exercises: [['What changes if isAdmin is false?', 'Find JSX guarded by &&.', 'Admin-only links and the Administrator label are omitted.'], ['Why pass onSignOut without parentheses?', 'React needs work to call later.', 'Without parentheses the function is stored as the click handler; parentheses would invoke it during rendering.']],
     },
     timekeeping: {
-      trace: [['activeSession', 'null', '{ time_in: "08:00" }', 'A successful Time In stores the open work session.'], ['isSubmitting', 'false', 'true → false', 'The guard prevents overlapping clicks.'], ['logs', '2 rows', '3 rows', 'The inserted IN or OUT row is added to displayed history.']],
-      state: ['Click Time In/Out', 'React guard validates current state', 'Supabase writes active_sessions/logs', 'State setters store returned rows', 'Buttons and WorkLog render again'],
-      result: `[{ "type": "IN", "date": "2026-08-26", "time": "08:00:00", "duration": null }]`,
-      exercises: [['Why can the database still reject a second Time In?', 'React state is not shared across simultaneous requests.', 'A unique database index is the final concurrency-safe rule.'], ['What does await change here?', 'It affects only the current async handler.', 'The handler pauses until Supabase settles, while the browser and React remain responsive.']],
+      trace: [['activeSession', 'null', '{ id: "l1", time_in: "08:00", time_out: null }', 'A successful Time In stores the open logs row.'], ['isProcessingRef.current', 'false', 'true → false', 'The ref immediately prevents overlapping clicks without waiting for a render.'], ['logs', '2 rows', '3 rows', 'Time In prepends one row; Time Out later replaces that same row.']],
+      state: ['Click Time In', 'React guard validates current state', 'Supabase inserts one logs row with null time_out', 'Click Time Out updates that row', 'State setters make the buttons and WorkLog render again'],
+      result: `[{ "id": "l1", "shift_date": "2026-08-26", "time_in": "2026-08-26T00:00:00Z", "time_out": null }]`,
+      exercises: [['Why also filter Time Out by is(time_out, null)?', 'Think about a second request reaching an already-completed row.', 'The update succeeds only while the row is still open, preventing a completed session from being ended twice.'], ['What does await change here?', 'It affects only the current async handler.', 'The handler pauses until Supabase settles, while the browser and React remain responsive.']],
     },
     worklog: {
       trace: [['limit', '5', '10', 'Show more increases how many existing items slice selects.'], ['visibleLogs', 'logs.slice(0, 5)', 'logs.slice(0, 10)', 'A new shorter/longer array is calculated.'], ['logs', 'unchanged', 'unchanged', 'slice never mutates the source array.']],
@@ -2061,10 +2062,10 @@ document.addEventListener('DOMContentLoaded', () => {
       exercises: [['Does Show more run a Supabase query?', 'Look for a database call in the click handler.', 'No. It only changes limit and reveals more rows already held in memory.'], ['Why use a key while mapping?', 'React must match old and new list elements.', 'A stable key lets React update the correct rendered row efficiently.']],
     },
     adminlogs: {
-      trace: [['search', '""', '"glenda"', 'The controlled search field changes immediately.'], ['filteredLogs', 'all rows', 'matching rows', 'useMemo recalculates from logs and search.'], ['CSV rows', 'not created', 'one row per filtered log', 'exportLogs maps the same filtered result.']],
-      state: ['Load logs with related profile fields', 'User changes search', 'useMemo filters in memory', 'Table rerenders', 'Export click creates and downloads a Blob'],
-      result: `[{ "id": "l1", "type": "IN", "profiles": { "full_name": "Glenda Cruz", "email": "glenda@aqler.tech" } }]`,
-      exercises: [['Why can thousands of rows feel slow?', 'Ask where filtering happens.', 'All rows are downloaded and repeatedly searched in the browser instead of paging/filtering in Postgres.'], ['Why does export need its own future server query?', 'The table page contains only a subset after server pagination.', 'A separate export query must intentionally retrieve every matching row, not only the visible page.']],
+      trace: [['search', '""', '"glenda"', 'The controlled field changes immediately.'], ['debouncedSearch', '""', '"glenda" after 400 ms', 'The previous timer is cancelled while typing continues.'], ['logs', 'old 20-row page', 'new matching 20-row page', 'The effect reruns the range/ilike query.'], ['exportedLogs', '[]', 'all matching batches', 'Export retrieves independently of the visible page.']],
+      state: ['User types', 'Debounce settles and resets page 1', 'Effect queries admin_work_logs with range and exact count', 'Table rerenders', 'Export click retrieves all matching batches and downloads a Blob'],
+      result: `{ "data": [{ "id": "l1", "full_name": "Glenda Cruz", "shift_date": "2026-08-26" }], "count": 53 }`,
+      exercises: [['Does each keystroke send a database query?', 'Follow the 400 ms timeout and its cleanup.', 'No. Continuing to type clears the old timer; only a pause updates debouncedSearch and reruns the effect.'], ['Why does export need its own server query?', 'The table logs state contains only a 20-row page.', 'A separate batched query intentionally retrieves every match, not only the visible page.']],
     },
     reminders: {
       trace: [['selectedDays', '[]', '[1,2,3,4,5]', 'Checkbox actions build the recurring weekday array.'], ['schedules', '3 rows', '4 rows', 'A successful insert is added to active UI state.'], ['schedules after cancel', '4 rows', '3 rows', 'The deleted schedule is filtered out locally.']],
@@ -2079,10 +2080,10 @@ document.addEventListener('DOMContentLoaded', () => {
       exercises: [['Why can a POST 200 still send zero emails?', 'HTTP success and business eligibility are different.', 'The function ran successfully, but every schedule may have been skipped as not due.'], ['Why are API keys environment variables?', 'Consider what Vite ships to browsers.', 'Server secrets stay in the Edge Function environment and are not exposed in downloaded frontend code.']],
     },
     shifts: {
-      trace: [['selectedEmployeeId', '"u1"', '"u2"', 'The admin changes whose schedule is being edited.'], ['baselineRows', 'old employee rows', 'new employee rows', 'loadShiftData queries the selected user.'], ['effective day', 'baseline 09:00–17:00', 'override day off', 'An exact-date override wins over the weekday template.']],
-      state: ['Choose employee/week', 'Load shifts + shift_overrides', 'Build seven effective day objects', 'Admin edits controlled fields', 'Upsert override or delete it to restore baseline'],
-      result: `{ "date": "2026-08-28", "source": "override", "is_day_off": true, "start_time": null, "end_time": null }`,
-      exercises: [['What happens when no override row exists?', 'Use the sticky-note mental model.', 'The app falls back to the recurring shifts row for that weekday.'], ['Why does changing employee require another query?', 'State changes do not automatically change database data.', 'The effect calls the memoized loader with the new employee ID, then stores the returned rows.']],
+      trace: [['selectedEmployeeId', '"u1"', '"u2"', 'The admin changes whose schedule is being edited.'], ['overrideOvernight', 'false', 'true', 'The bulk checkbox records the choice before Apply is pressed.'], ['day.overnight', 'false', 'true', 'Apply copies that choice into each selected date object.'], ['is_overnight', 'false', 'true', 'Save maps the draft property to the database column.'], ['display', '05:00', '05:00 +1 day', 'The read-only card explains that the end belongs to tomorrow.']],
+      state: ['Choose employee/week', 'Load shifts + shift_overrides', 'Build seven effective day objects', 'Apply bulk values or edit one date', 'Upsert custom/day-off rows or delete an override to restore baseline'],
+      result: `{ "shift_date": "2026-08-28", "start_time": "17:00", "end_time": "05:00", "is_overnight": true, "is_day_off": false }`,
+      exercises: [['What happens when no override row exists?', 'Use the sticky-note mental model.', 'The app falls back to the recurring shifts row for that weekday.'], ['Why is is_overnight false for a day off?', 'A day off has no start or end time.', 'Overnight only describes a working shift crossing midnight; forcing false keeps the row internally consistent.']],
     },
     database: {
       trace: [['auth.uid()', '"u1"', '"u1"', 'The JWT identity is compared with each row user_id.'], ['USING result', 'unknown', 'true', 'The existing row may be selected/updated/deleted.'], ['WITH CHECK result', 'unknown', 'false', 'An invalid new row is rejected before storage.']],

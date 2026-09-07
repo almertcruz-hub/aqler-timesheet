@@ -4,8 +4,8 @@ AQLER Timesheet is an employee timekeeping application built with React, Vite,
 Tailwind CSS, and Supabase.
 
 Employees can record time-in and time-out activity. Administrators can review
-employee logs, manage scheduled email reminders, and export records. A shift
-management module is also planned.
+employee logs, manage scheduled email reminders, export records, and maintain
+recurring weekly shifts plus exact-date schedule overrides.
 
 ## Development
 
@@ -34,8 +34,8 @@ node docs/generate-source-guide.mjs
   copyable code examples similar to the DaiDai documentation.
 - [Beginner Code Guide source](./docs/BEGINNER_CODE_GUIDE.md) contains the
   text-first Markdown version.
-- [Shift Module Guide source](./docs/modules/SHIFT_MODULE.md) contains the planned
-  shift feature's SQL, RLS policies, React code, and tests in Markdown.
+- [Shift Module Guide source](./docs/modules/SHIFT_MODULE.md) summarizes the live
+  shift feature, its SQL/RLS reference, and the corresponding guide module.
 
 ## Main folders
 

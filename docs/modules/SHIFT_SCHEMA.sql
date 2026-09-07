@@ -4,11 +4,12 @@ create table public.shifts (
   day_of_week smallint not null,
   start_time time without time zone not null,
   end_time time without time zone not null,
+  is_overnight boolean not null default false,
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   constraint shifts_valid_weekday check (day_of_week between 0 and 6),
-  constraint shifts_end_after_start check (end_time > start_time),
+  constraint shifts_different_times check (start_time <> end_time),
   constraint shifts_one_per_employee_weekday unique (user_id, day_of_week)
 );
 
@@ -64,6 +65,7 @@ create table public.shift_overrides (
   shift_date date not null,
   start_time time without time zone,
   end_time time without time zone,
+  is_overnight boolean not null default false,
   is_day_off boolean not null default false,
   notes text,
   created_at timestamptz not null default now(),
@@ -74,13 +76,14 @@ create table public.shift_overrides (
       is_day_off = true
       and start_time is null
       and end_time is null
+      and is_overnight = false
     )
     or
     (
       is_day_off = false
       and start_time is not null
       and end_time is not null
-      and end_time > start_time
+      and start_time <> end_time
     )
   )
 );

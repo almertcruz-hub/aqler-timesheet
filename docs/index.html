@@ -203,10 +203,10 @@ BREVO_FROM_NAME</code></pre></div>
         <div class="table-wrap"><table><thead><tr><th>Table</th><th>Purpose</th><th>Important columns</th><th>Who may access it</th></tr></thead><tbody>
           <tr><td><code>auth.users</code></td><td>Supabase-managed account identity.</td><td><code>id</code>, <code>email</code>, user metadata, app metadata</td><td>Managed by Supabase Auth; admin SQL can assign app role.</td></tr>
           <tr><td><code>profiles</code></td><td>Display name and email usable in public-table relationships.</td><td><code>id</code>, <code>full_name</code>, <code>email</code></td><td>Employee reads own; admin reads all.</td></tr>
-          <tr><td><code>active_sessions</code></td><td>Durable current/open work session.</td><td><code>user_id</code>, <code>time_in</code>, <code>time_out</code></td><td>Employee manages own rows.</td></tr>
-          <tr><td><code>logs</code></td><td>Readable IN/OUT activity history.</td><td><code>type</code>, <code>date</code>, <code>time</code>, <code>duration</code></td><td>Employee manages own; admin reads all.</td></tr>
-          <tr><td><code>shifts</code></td><td>Normal recurring Monday–Sunday work pattern.</td><td><code>user_id</code>, <code>day_of_week</code>, start/end time</td><td>Employee reads own; admin manages all.</td></tr>
-          <tr><td><code>shift_overrides</code></td><td>Exception for one exact calendar date.</td><td><code>shift_date</code>, custom times, <code>is_day_off</code></td><td>Employee reads own; admin manages all.</td></tr>
+          <tr><td><code>logs</code></td><td>One complete work session per row; an open row has a null Time Out.</td><td><code>user_id</code>, <code>shift_date</code>, <code>time_in</code>, <code>time_out</code></td><td>Employee manages own; admin reads through the reporting view.</td></tr>
+          <tr><td><code>admin_work_logs</code></td><td>Search-friendly reporting view that combines a log with employee identity.</td><td>log fields, <code>full_name</code>, <code>email</code>, <code>search_text</code></td><td>Admin SELECT access, backed by the underlying tables and policies.</td></tr>
+          <tr><td><code>shifts</code></td><td>Normal recurring Monday–Sunday work pattern.</td><td><code>user_id</code>, <code>day_of_week</code>, start/end time, <code>is_overnight</code></td><td>Employee reads own; admin manages all.</td></tr>
+          <tr><td><code>shift_overrides</code></td><td>Exception for one exact calendar date.</td><td><code>shift_date</code>, custom times, <code>is_overnight</code>, <code>is_day_off</code>, notes</td><td>Employee reads own; admin manages all.</td></tr>
           <tr><td><code>email_reminders</code></td><td>Recurring email schedule and delivery result.</td><td>days, time, timezone, content, status, last sent date</td><td>Admins through RLS; Edge Function through service role.</td></tr>
         </tbody></table></div>
         <h3>Example related data</h3>
@@ -217,20 +217,17 @@ BREVO_FROM_NAME</code></pre></div>
   email: 'glenda@aqler.tech'
 }
 
-// One completed OUT log returned with its related profile
+// One completed work-session row returned by the admin reporting view
 {
   id: 'log-uuid',
   user_id: 'employee-uuid',
-  type: 'OUT',
-  date: '8/24/2026',
-  time: '5:02:10 PM',
-  duration: 9.03,
-  profiles: {
-    full_name: 'Glenda Cruz',
-    email: 'glenda@aqler.tech'
-  }
+  shift_date: '2026-08-24',
+  time_in: '2026-08-24T00:03:00.000Z',
+  time_out: '2026-08-24T09:02:00.000Z',
+  full_name: 'Glenda Cruz',
+  email: 'glenda@aqler.tech'
 }</code></pre></div>
-        <p>The nested <code>profiles</code> object is available because <code>logs.user_id</code> has a foreign key to <code>profiles.id</code>. The relationship exists in Postgres, not in React.</p>
+        <p>The <code>admin_work_logs</code> database view puts log and profile fields into one flat, searchable result. React can request a page of rows without first downloading every profile and log. The relationship and combined search text are prepared in Postgres, not by the browser.</p>
       </section>
 
       <section class="lesson">
@@ -394,8 +391,8 @@ console.log('C')</code></pre></div>
         <p class="eyebrow">Complete user journeys</p>
         <h2>See how modules cooperate before studying them separately</h2>
         <div class="journey-grid">
-          <article><h3>Employee Time In</h3><ol><li>App restores the session.</li><li>Home loads logs and an open session.</li><li>TimeButtons calls Home’s <code>timeIn</code>.</li><li>Home inserts <code>active_sessions</code>.</li><li>Home inserts an IN <code>logs</code> row.</li><li>React prepends the row and disables Time In.</li></ol></article>
-          <article><h3>Admin views and exports</h3><ol><li>App verifies admin app metadata.</li><li>Admin loads logs joined to profiles.</li><li>RLS permits all-log SELECT.</li><li>Search creates <code>filteredLogs</code>.</li><li>The table maps the filtered rows.</li><li>Export converts the same rows into CSV.</li></ol></article>
+          <article><h3>Employee Time In</h3><ol><li>App restores the session.</li><li>Home loads the employee’s <code>logs</code>.</li><li>Home finds a row whose <code>time_out</code> is null.</li><li>TimeButtons calls Home’s <code>timeIn</code>.</li><li>Home inserts one open <code>logs</code> row.</li><li>React prepends it and changes the button to Time Out.</li></ol></article>
+          <article><h3>Admin views and exports</h3><ol><li>App verifies admin app metadata.</li><li>Admin requests one page from <code>admin_work_logs</code>.</li><li>Postgres applies search and returns an exact count.</li><li>Previous/Next changes <code>page</code> and reruns that query.</li><li>Refresh changes <code>refreshNumber</code> and reruns it without changing the page.</li><li>Export performs its own batched query so the CSV is not limited to the visible page.</li></ol></article>
           <article><h3>Recurring email</h3><ol><li>Admin inserts an active reminder.</li><li>Cron POSTs to the Edge Function.</li><li>The worker checks weekday and local time.</li><li>It claims the row using <code>last_sent_on</code>.</li><li>Brevo receives the email request.</li><li>Success or failure is saved for inspection/retry.</li></ol></article>
         </div>
       </section>
@@ -508,68 +505,101 @@ if (password !== confirmPassword) {
         <div class="module-heading"><span class="card-number">4</span><div><h2>Employee timekeeping</h2><p>Loads the employee session, prevents duplicate actions, and records Time In and Time Out.</p></div></div>
         <ul class="file-list"><li><code>src/pages/Home.jsx</code></li><li><code>src/components/TimeButtons.jsx</code></li><li><code>src/components/AlertMessage.jsx</code></li></ul>
         <div class="module-tabs" role="tablist" aria-label="Timekeeping views"><button class="module-tab" role="tab" aria-selected="true" data-panel="time-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="time-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="time-logic">Logical explanation</button></div>
-        <div class="module-panel" id="time-overall" role="tabpanel"><p><code>Home</code> owns the data and handlers. <code>TimeButtons</code> receives callbacks and disabled-state information. <code>AlertMessage</code> displays temporary feedback. The durable open session is stored in <code>active_sessions</code>; the readable activity history is stored in <code>logs</code>.</p><div class="flow"><div>Load logs/session</div><div>Employee clicks</div><div>Guard rejects duplicates</div><div>Write active session</div><div>Write log</div><div>Update React state</div></div></div>
+        <div class="module-panel" id="time-overall" role="tabpanel"><p><code>Home</code> owns the data and handlers. <code>TimeButtons</code> receives callbacks and disabled-state information. <code>AlertMessage</code> displays temporary feedback. One <code>logs</code> row represents one work session: Time In inserts it with <code>time_out = null</code>, and Time Out completes that same row.</p><div class="flow"><div>Load employee logs</div><div>Find null time_out</div><div>Employee clicks</div><div>Guard rejects duplicates</div><div>Insert or update one log</div><div>Update React state</div></div></div>
         <div class="module-panel" id="time-code" role="tabpanel" hidden>
-          <h3>Load the open session</h3><div class="code-wrap"><pre><code>const { data: sessionData } = await supabase
-  .from('active_sessions')
+          <h3>Load logs and find the open session</h3><div class="code-wrap"><pre><code>const { data } = await supabase
+  .from('logs')
   .select('*')
   .eq('user_id', user.id)
-  .is('time_out', null)
-  .maybeSingle()</code></pre></div><p><code>maybeSingle</code> accepts zero or one result. The partial unique index prevents more than one open row per user.</p>
+  .order('time_in', { ascending: false })
+
+const loadedLogs = data || []
+const openSession = loadedLogs.find(
+  (log) =&gt; log.time_out === null
+)</code></pre></div><p>The query loads this employee’s rows newest first. <code>find</code> returns the first unfinished row, which becomes <code>activeSession</code>.</p>
           <h3>Time In guard and insert</h3><div class="code-wrap"><pre><code>if (isLoading || activeSession) {
   showAlert('You are already timed in!')
   return
 }
 
 const { error, data } = await supabase
-  .from('active_sessions')
+  .from('logs')
   .insert({ user_id: user.id, time_in: now.toISOString() })
-  .select()</code></pre></div>
+  .select()
+  .single()</code></pre></div>
           <h3>Calculate Time Out duration</h3><div class="code-wrap"><pre><code>const savedTimeIn = new Date(savedSession.time_in)
 const hours = ((now - savedTimeIn) / (1000 * 60 * 60)).toFixed(2)</code></pre></div><p>Subtracting Date values returns milliseconds. Dividing converts milliseconds to hours.</p>
           <h3>Disable impossible buttons</h3><div class="code-wrap"><pre><code>disabled={isLoading || !!activeTimeIn}
 disabled={isLoading || !activeTimeIn}</code></pre></div><p>Time In is disabled during loading or an active session. Time Out is disabled when there is no active session.</p>
         </div>
-        <div class="module-panel" id="time-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>Home loads logs and any open session.</strong><span>The employee ID filters both queries; RLS independently enforces ownership.</span></li><li><strong>Time In checks local state.</strong><span>The guard prevents an obvious duplicate click before a request is sent.</span></li><li><strong>The database inserts an active session.</strong><span>The unique index is the final duplicate-session protection.</span></li><li><strong>A separate IN log is inserted.</strong><span>React prepends the returned row to the visible log list.</span></li><li><strong>Time Out uses a processing ref as a lock.</strong><span>It blocks rapid double clicks without waiting for a render.</span></li><li><strong>The active row receives <code>time_out</code>.</strong><span>The query also requires the row to still be open.</span></li><li><strong>An OUT log stores the calculated duration.</strong><span>State and buttons return to the inactive-session condition.</span></li></ol></div>
+        <div class="module-panel" id="time-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>Home loads the employee’s logs.</strong><span><code>user_id</code> filters the query; RLS independently enforces ownership.</span></li><li><strong>Home finds the unfinished row.</strong><span>A null <code>time_out</code> means the session is still open.</span></li><li><strong>Time In checks state and the processing ref.</strong><span>The guard blocks an already-open session and rapid duplicate clicks.</span></li><li><strong>One log row is inserted.</strong><span>It contains <code>time_in</code>; its null <code>time_out</code> makes it active. React prepends the returned row.</span></li><li><strong>Time Out uses the same processing ref as a lock.</strong><span>It blocks another click without waiting for a render.</span></li><li><strong>The same row receives <code>time_out</code>.</strong><span>The query matches its ID, employee ID, and still-null Time Out so a completed row cannot be completed twice.</span></li><li><strong>React replaces the old row with the returned completed row.</strong><span><code>activeSession</code> becomes null and the controls return to Time In.</span></li></ol></div>
       </section>
 
       <section class="lesson module-section" id="worklog">
-        <div class="module-heading"><span class="card-number">5</span><div><h2>Employee work-log display</h2><p>Formats duration, marks incomplete days, and reveals logs in groups of ten.</p></div></div>
+        <div class="module-heading"><span class="card-number">5</span><div><h2>Employee work-log display</h2><p>Formats each complete or open work session and reveals existing rows in groups of ten.</p></div></div>
         <ul class="file-list"><li><code>src/components/WorkLog.jsx</code></li></ul>
         <div class="module-tabs" role="tablist" aria-label="Work log views"><button class="module-tab" role="tab" aria-selected="true" data-panel="work-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="work-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="work-logic">Logical explanation</button></div>
         <div class="module-panel" id="work-overall" role="tabpanel"><p>This component receives the complete employee <code>logs</code> array from Home. Its “pagination” is client-side display limiting: all rows were already downloaded, and <code>slice</code> chooses how many to show.</p></div>
         <div class="module-panel" id="work-code" role="tabpanel" hidden>
           <div class="code-wrap"><pre><code>const [limit, setLimit] = useState(10)
 const visibleLogs = logs.slice(0, limit)</code></pre></div><p><code>slice(0, 10)</code> returns positions 0 through 9. It does not modify the original array.</p>
-          <div class="code-wrap"><pre><code>const duration = parseFloat(log.duration) || 0
-const totalMinutes = Math.round(duration * 60)
-const isIncomplete = log.type === 'OUT' &amp;&amp; totalMinutes &lt; 9 * 60</code></pre></div><p>Only OUT logs are judged against the current nine-hour completeness rule.</p>
+          <div class="code-wrap"><pre><code>if (!log.time_out) return 'In progress'
+
+const timeIn = new Date(log.time_in)
+const timeOut = new Date(log.time_out)
+const totalMinutes = Math.round(
+  (timeOut - timeIn) / (1000 * 60)
+)</code></pre></div><p>An unfinished row returns “In progress.” A completed row subtracts its two timestamps and converts milliseconds into whole minutes before displaying hours and minutes.</p>
           <div class="code-wrap"><pre><code>onClick={() =&gt; setLimit((x) =&gt; x + 10)}</code></pre></div><p>The updater receives the latest limit and returns a value ten higher.</p>
         </div>
-        <div class="module-panel" id="work-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>Home passes logs as a prop.</strong><span>WorkLog does not query Supabase.</span></li><li><strong><code>slice</code> creates the visible subset.</strong><span>The initial limit is ten.</span></li><li><strong><code>map</code> renders one card per visible row.</strong><span>Duration and completeness are calculated for that row.</span></li><li><strong>Show more changes state.</strong><span>React rerenders and slice returns ten more rows.</span></li><li><strong>Show less resets the limit.</strong><span>No database request occurs during either button click.</span></li></ol></div>
+        <div class="module-panel" id="work-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>Home passes logs as a prop.</strong><span>WorkLog does not query Supabase.</span></li><li><strong><code>slice</code> creates the visible subset.</strong><span>The initial limit is ten.</span></li><li><strong><code>map</code> renders one card per visible row.</strong><span>A null Time Out produces the amber Active state; two timestamps produce the completed duration.</span></li><li><strong>Show more changes state.</strong><span>React rerenders and slice returns ten more rows.</span></li><li><strong>Show less resets the limit.</strong><span>No database request occurs during either button click.</span></li></ol></div>
       </section>
 
       <section class="lesson module-section" id="adminlogs">
-        <div class="module-heading"><span class="card-number">6</span><div><h2>Administrator logs, search, and CSV export</h2><p>Loads all permitted employees and logs, filters them in memory, and downloads the current result.</p></div></div>
+        <div class="module-heading"><span class="card-number">6</span><div><h2>Administrator logs, search, pagination, and CSV export</h2><p>Lets Postgres search and paginate the table while a separate batched query prepares the complete export.</p></div></div>
         <ul class="file-list"><li><code>src/pages/Admin.jsx</code></li></ul>
         <div class="module-tabs" role="tablist" aria-label="Admin log views"><button class="module-tab" role="tab" aria-selected="true" data-panel="admin-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="admin-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="admin-logic">Logical explanation</button></div>
-        <div class="module-panel" id="admin-overall" role="tabpanel"><p>The current Admin page downloads all logs during its first effect. <code>useMemo</code> derives <code>filteredLogs</code> whenever logs or search changes. The table and CSV export both use that same derived array. This is simple, but it is not yet server-side pagination and will become slower as the table grows.</p></div>
+        <div class="module-panel" id="admin-overall" role="tabpanel"><p>The table requests only 20 rows at a time from <code>admin_work_logs</code>. A 400 ms debounce waits until typing pauses before changing <code>debouncedSearch</code>. Because <code>page</code>, <code>debouncedSearch</code>, and <code>refreshNumber</code> are effect dependencies, changing any of them reruns the table query. Export is deliberately separate: it retrieves every matching row in batches of 1,000 so the downloaded CSV is complete even though the screen shows one page.</p></div>
         <div class="module-panel" id="admin-code" role="tabpanel" hidden>
-          <h3>Load related profiles</h3><div class="code-wrap"><pre><code>supabase
-  .from('logs')
-  .select('id, type, time, date, duration, created_at, user_id, profiles(full_name, email)')
-  .order('created_at', { ascending: false })</code></pre></div>
-          <h3>Memoized client search</h3><div class="code-wrap"><pre><code>const filteredLogs = useMemo(() =&gt; {
-  const term = search.trim().toLowerCase()
-  if (!term) return logs
+          <h3>Debounce typing</h3><div class="code-wrap"><pre><code>useEffect(() =&gt; {
+  const timer = setTimeout(() =&gt; {
+    setDebouncedSearch(search.trim())
+    setPage(1)
+  }, 400)
 
-  return logs.filter((log) =&gt; {
-    const employee = log.profiles
-    return [employee?.full_name, employee?.email, log.type, log.date]
-      .filter(Boolean)
-      .some((value) =&gt; value.toLowerCase().includes(term))
-  })
-}, [logs, search])</code></pre></div>
+  return () =&gt; clearTimeout(timer)
+}, [search])</code></pre></div><p>Every keystroke creates a new 400 ms timer. React first runs the previous cleanup, so only the final pause changes the database search and resets the result to page 1.</p>
+          <h3>Request one searched page and its exact count</h3><div class="code-wrap"><pre><code>const from = (page - 1) * PAGE_SIZE
+const to = from + PAGE_SIZE - 1
+
+let query = supabase
+  .from('admin_work_logs')
+  .select('id, user_id, shift_date, time_in, time_out, created_at, full_name, email', { count: 'exact' })
+  .order('time_in', { ascending: false })
+  .range(from, to)
+
+if (debouncedSearch) {
+  query = query.ilike('search_text', `%${debouncedSearch}%`)
+}</code></pre></div><p><code>range</code> selects the current 20-row window. <code>count: 'exact'</code> also asks Postgres for the total number of rows matching the same filter, which is used to calculate the number of pages. <code>ilike</code> performs a case-insensitive “contains” search on the view’s combined search field.</p>
+          <h3>Export every match in controlled batches</h3><div class="code-wrap"><pre><code>while (true) {
+  const to = from + EXPORT_BATCH_SIZE - 1
+  let query = supabase
+    .from('admin_work_logs')
+    .select('id, user_id, shift_date, time_in, time_out, full_name, email')
+    .order('time_in', { ascending: false })
+    .range(from, to)
+
+  if (search.trim()) {
+    query = query.ilike('search_text', `%${search.trim()}%`)
+  }
+
+  const { data, error: exportError } = await query
+  if (exportError) throw exportError
+  const batch = data || []
+  exportedLogs.push(...batch)
+  if (batch.length &lt; EXPORT_BATCH_SIZE) break
+  from += EXPORT_BATCH_SIZE
+}</code></pre></div><p>This loop keeps asking for the next 1,000 matches. A short final batch proves there are no more rows. It uses the current search text, but it does not reuse the 20 rows shown on screen.</p>
           <h3>Create and click a temporary download link</h3><div class="code-wrap"><pre><code>const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' })
 const url = URL.createObjectURL(blob)
 const link = document.createElement('a')
@@ -580,7 +610,7 @@ link.click()
 link.remove()
 URL.revokeObjectURL(url)</code></pre></div>
         </div>
-        <div class="module-panel" id="admin-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>The first effect starts three queries together.</strong><span><code>Promise.all</code> waits for logs, profiles, and reminders.</span></li><li><strong>Admin RLS permits cross-employee reads.</strong><span>The React route check is not the database permission.</span></li><li><strong>Typing changes <code>search</code>.</strong><span><code>useMemo</code> recalculates the filtered array in the browser.</span></li><li><strong>The table maps filtered rows.</strong><span>Nested <code>profiles</code> provides name and email.</span></li><li><strong>Export maps the same rows into columns.</strong><span>Quotes are escaped by doubling them for valid CSV.</span></li><li><strong>A Blob becomes a temporary URL.</strong><span>The temporary anchor is clicked automatically, removed, and its URL memory released.</span></li></ol></div>
+        <div class="module-panel" id="admin-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>The setup effect loads profiles and active reminders once.</strong><span><code>Promise.all</code> starts both independent queries together. Logs have their own effect because their page and search change more often.</span></li><li><strong>Typing changes immediate <code>search</code> state.</strong><span>The debounce cleanup cancels abandoned timers; a 400 ms pause copies the trimmed text into <code>debouncedSearch</code> and resets page 1.</span></li><li><strong>The log effect sends a server query.</strong><span>Its dependency array is <code>[page, debouncedSearch, refreshNumber]</code>, so page buttons, a settled search, or Refresh cause a new request.</span></li><li><strong>Postgres searches the flat reporting view.</strong><span>The view exposes name, email, date, and log information through <code>search_text</code>; <code>ilike</code> filters before rows reach the browser.</span></li><li><strong>The response contains rows plus a count.</strong><span><code>range</code> returns one page, while the exact total calculates <code>totalPages</code>.</span></li><li><strong>Export sends separate batched queries.</strong><span>It deliberately gathers every current search match rather than exporting only the visible page.</span></li><li><strong>The rows become CSV and a Blob URL.</strong><span>Quotes are escaped, a temporary anchor is clicked automatically, then the anchor and URL are removed from browser memory.</span></li></ol></div>
       </section>
 
       <section class="lesson module-section" id="reminders">
@@ -666,6 +696,8 @@ URL.revokeObjectURL(url)</code></pre></div>
             <tr><td>Date-specific day off</td><td>Upsert an override with null times and <code>is_day_off = true</code>.</td><td>Only that calendar date becomes a day off.</td></tr>
             <tr><td>Use baseline</td><td>Delete the exact-date override.</td><td>The page falls back to the normal weekday row again.</td></tr>
           </tbody></table></div>
+          <aside class="callout"><strong>Overnight is saved, not guessed</strong>Each working baseline or custom override stores <code>is_overnight</code>. A 5:00 PM → 5:00 AM shift is valid when that Boolean is true, and the read-only schedule adds <code>+1 day</code> beside the end time. A day off saves null times and forces overnight to false.</aside>
+          <p>The bulk controls are draft helpers. For a baseline, selected weekday numbers receive the same start, end, and overnight values. For a specific week, <code>overrideOvernight</code> fills <code>day.overnight</code> on every selected date; saving then converts that screen value to the database column <code>is_overnight</code>. Individual date cards can still be edited afterward, and date-specific days off can keep a note.</p>
           <aside class="callout warning"><strong>Philippine time model</strong>Recurring and override hours use PostgreSQL <code>time without time zone</code> because they are local clock values such as 09:00. The app defines them as Philippine Time (UTC+8); audit timestamps such as <code>created_at</code> remain <code>timestamptz</code>.</aside>
         </div>
         <div class="module-panel" id="shift-code" role="tabpanel" hidden><p>The complete current Shift page, route, navigation, and schema reference load here as notebook cells.</p></div>
@@ -676,9 +708,9 @@ URL.revokeObjectURL(url)</code></pre></div>
           <li><strong>The displayed Monday and Sunday are calculated.</strong><span>Date helpers normalize the selected week and create seven local <code>YYYY-MM-DD</code> values.</span></li>
           <li><strong>Both schedule tables load together.</strong><span><code>Promise.all</code> waits for the employee baseline and only the overrides between the selected week’s first and last dates.</span></li>
           <li><strong>The week is merged in memory.</strong><span>For each date, <code>buildWeekSchedule</code> prefers an override. Without one, it copies the matching <code>day_of_week</code> baseline.</span></li>
-          <li><strong>Controlled inputs edit React state.</strong><span>Multi-day tools update several objects with <code>map</code>; individual controls replace one matching day or date.</span></li>
-          <li><strong>Baseline save validates then synchronizes.</strong><span>Enabled weekdays are upserted using <code>user_id,day_of_week</code>; previously saved weekdays now marked off are deleted.</span></li>
-          <li><strong>Specific-week save synchronizes exceptions.</strong><span>Custom times and date-specific days off are upserted using <code>user_id,shift_date</code>. Dates switched to Use baseline have their override deleted.</span></li>
+          <li><strong>Controlled inputs edit React state.</strong><span>Multi-day tools update several objects with <code>map</code>; individual controls replace one matching day or date. The overnight checkbox is an actual Boolean value on each working day.</span></li>
+          <li><strong>Baseline save validates then synchronizes.</strong><span>Enabled weekdays, including their saved <code>is_overnight</code> value, are upserted using <code>user_id,day_of_week</code>; previously saved weekdays now marked off are deleted.</span></li>
+          <li><strong>Specific-week save synchronizes exceptions.</strong><span>Custom times, overnight status, and date-specific days off/notes are upserted using <code>user_id,shift_date</code>. Dates switched to Use baseline have their override deleted.</span></li>
           <li><strong>The page reloads permitted rows.</strong><span>Supabase applies GRANT, RLS, and constraints before returning the saved result for React to render.</span></li>
         </ol></div>
       </section>
@@ -687,10 +719,10 @@ URL.revokeObjectURL(url)</code></pre></div>
         <div class="module-heading"><span class="card-number">10</span><div><h2>Database schema, relationships, and RLS</h2><p>Defines durable data, automatic profiles, admin access, and recurring schedules.</p></div></div>
         <ul class="file-list"><li><code>supabase/migrations/20260813181500_create_timesheet_schema.sql</code></li><li><code>...190000_add_admin_access.sql</code></li><li><code>...193000_link_logs_to_profiles.sql</code></li><li><code>...200000_add_email_reminders.sql</code></li><li><code>...203000_make_reminders_recurring.sql</code></li><li><code>...210000_remove_cancelled_reminders.sql</code></li></ul>
         <div class="module-tabs" role="tablist" aria-label="Database views"><button class="module-tab" role="tab" aria-selected="true" data-panel="db-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="db-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="db-logic">Logical explanation</button></div>
-        <div class="module-panel" id="db-overall" role="tabpanel"><p><code>logs</code> stores IN/OUT history. <code>active_sessions</code> stores durable open sessions. <code>profiles</code> mirrors display information from Auth. <code>email_reminders</code> stores recurring schedules. Foreign keys create relationships, constraints protect valid data, GRANT opens operations to the authenticated database role, and RLS narrows them per user.</p></div>
+        <div class="module-panel" id="db-overall" role="tabpanel"><p>The current application treats each <code>logs</code> row as one work session: null <code>time_out</code> means open, and a timestamp means complete. <code>admin_work_logs</code> is the flat reporting/search view used by server-side pagination. <code>profiles</code> mirrors display information from Auth, while schedule and reminder tables store their respective rules. The earliest migration still contains the older <code>active_sessions</code> structure for migration history, but the current React timekeeping flow no longer queries it. Foreign keys create relationships, constraints protect valid data, GRANT opens operations to the authenticated database role, and RLS narrows them per user.</p></div>
         <div class="module-panel" id="db-code" role="tabpanel" hidden>
-          <h3>Allow one open session</h3><div class="code-wrap"><pre><code>create unique index if not exists one_open_session_per_user
-  on public.active_sessions (user_id)
+          <h3>Allow one open log row per employee</h3><div class="code-wrap"><pre><code>create unique index if not exists one_open_log_per_user
+  on public.logs (user_id)
   where time_out is null;</code></pre></div>
           <h3>Create a profile after Auth changes</h3><div class="code-wrap"><pre><code>create trigger on_auth_user_created
   after insert or update of email, raw_user_meta_data on auth.users

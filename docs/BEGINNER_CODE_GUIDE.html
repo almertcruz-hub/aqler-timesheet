@@ -26,9 +26,9 @@
             <strong>2. Learn the concepts</strong>
             <span>You are here.</span>
           </a>
-          <a class="course-step" href="modules/SHIFT_MODULE.html">
-            <strong>3. Build the shift module</strong>
-            <span>Apply these concepts to a real feature.</span>
+          <a class="course-step" href="index.html#shifts">
+            <strong>3. Study the shift module</strong>
+            <span>Open the complete current Shift.jsx walkthrough.</span>
           </a>
         </div>
       </header>
@@ -61,6 +61,12 @@
             React controls the browser interface. Supabase provides authentication
             and the database. Row Level Security decides which database rows the
             signed-in user may read or change.
+          </p>
+          <p>
+            The current design stores one whole work session in one <code>logs</code>
+            row. Time In inserts it with a null <code>time_out</code>; Time Out updates
+            that same row. The row can therefore show both times, shift date,
+            duration, and status together.
           </p>
         </div>
       </section>
@@ -259,11 +265,12 @@ const error = result.error</code></pre></div>
           </table>
         </div>
 
-        <h3>Filtering with <code>or</code></h3>
-        <div class="code-wrap"><pre><code>.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`)</code></pre></div>
+        <h3>Filtering combined search text</h3>
+        <div class="code-wrap"><pre><code>.ilike('search_text', `%${search}%`)</code></pre></div>
         <p>
-          This is like a SQL <code>WHERE</code> containing alternatives: the name can
-          match or the email can match. <code>ilike</code> is a case-insensitive text match.
+          The reporting view prepares one <code>search_text</code> value from the
+          employee and work-session fields. <code>ilike</code> is a case-insensitive
+          “contains” filter that runs in Postgres before rows reach the browser.
         </p>
 
         <h3>Why a view helps the admin-log search</h3>
@@ -273,9 +280,9 @@ const error = result.error</code></pre></div>
           searchable fields behave like columns of one source.
         </p>
         <div class="code-wrap"><pre><code>supabase
-  .from('admin_log_view')
+  .from('admin_work_logs')
   .select('*', { count: 'exact' })
-  .or(`full_name.ilike.%${search}%,email.ilike.%${search}%`)</code></pre></div>
+  .ilike('search_text', `%${search}%`)</code></pre></div>
         <aside class="callout">
           <strong>Simple meaning</strong>
           The one search input stays the same. The view makes the database result
@@ -291,7 +298,7 @@ const error = result.error</code></pre></div>
 const to = from + pageSize - 1
 
 const { data, count, error } = await supabase
-  .from('admin_log_view')
+  .from('admin_work_logs')
   .select('*', { count: 'exact' })
   .range(from, to)</code></pre></div>
         <p>
@@ -318,9 +325,9 @@ const { data, count, error } = await supabase
         </p>
         <aside class="callout success">
           <strong>Export should be separate</strong>
-          The screen query should remain paginated. The CSV or spreadsheet export
-          should run its own query for all matching rows so it is not limited to the
-          visible page.
+          The screen query remains at 20 rows. The current CSV export runs its own
+          <code>admin_work_logs</code> requests in batches of 1,000 until it has every
+          search match, so it is not limited to the visible page.
         </aside>
       </section>
 
@@ -387,7 +394,7 @@ where lower(email) = lower('admin@example.com');</code></pre></div>
       <section class="study-order">
         <h2>Next lesson</h2>
         <p>Apply these concepts to employee schedules, administrator-only forms, and shift RLS policies.</p>
-        <a class="button" href="modules/SHIFT_MODULE.html">Open the shift module →</a>
+        <a class="button" href="index.html#shifts">Open the complete shift module →</a>
       </section>
 
       <footer>

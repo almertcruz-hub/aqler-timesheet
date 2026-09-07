@@ -85,9 +85,9 @@ function TimeButtons({
               role="status"
               className="flex w-fit items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1.5 text-sm font-semibold text-emerald-300">
               <span className="relative flex h-2.5 w-2.5">
-                <span className="relative inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-40" />
+                <span className="absolute inset-0 z-0 animate-ping rounded-full bg-emerald-400 opacity-40" />
                   
-                <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                <span className="relative inline-flex z-10 h-2.5 w-2.5 rounded-full bg-emerald-400" />
               </span>
               Clocked In
             </div>

@@ -113,7 +113,7 @@ function explainSql(trimmed) {
   if (/^end;?$/i.test(trimmed)) return 'Ends the executable body of the Postgres function.'
   if (/^return new/i.test(trimmed)) return 'Returns the new auth row so the triggering INSERT or UPDATE can finish normally.'
   if (/^notify pgrst/i.test(trimmed)) return 'Asks PostgREST to reload its schema cache so the new foreign-key relationship is discoverable by Supabase queries.'
-  if (/^(id|user_id|type|time|date|duration|created_at|updated_at|time_in|time_out|full_name|email|scheduled_at|subject|message|status|sent_at|error|created_by|days_of_week|day_of_week|reminder_time|timezone|last_sent_on|shift_date|start_time|end_time|is_day_off|notes)\b/i.test(trimmed)) return 'Defines or changes this column, including its data type, null rule, default, relationship, or validation rule.'
+  if (/^(id|user_id|type|time|date|duration|created_at|updated_at|time_in|time_out|full_name|email|scheduled_at|subject|message|status|sent_at|error|created_by|days_of_week|day_of_week|reminder_time|timezone|last_sent_on|shift_date|start_time|end_time|is_overnight|is_day_off|notes)\b/i.test(trimmed)) return 'Defines or changes this column, including its data type, null rule, default, relationship, or validation rule.'
   if (/^\);?$/.test(trimmed)) return 'Closes the current table, index, policy, function call, or grouped SQL definition.'
   if (/^\($/.test(trimmed)) return 'Opens a grouped SQL expression whose condition continues on the following lines.'
   return 'Continues the current SQL statement by supplying one of its values, conditions, columns, or clauses.'
@@ -257,6 +257,7 @@ function titleChunk(code, extension) {
     toDateString: 'Convert a Date into a local YYYY-MM-DD value',
     formatDate: 'Format a schedule date for Philippine readers',
     buildWeekSchedule: 'Merge overrides over the recurring baseline',
+    hasInvalidShiftTimes: 'Check whether a same-day or overnight time range is invalid',
     loadSchedule: 'Load the employee baseline and selected-week overrides',
     toggleBaselineDay: 'Select or deselect a baseline weekday',
     applyBaselineTime: 'Apply one time range to selected baseline days',
@@ -276,13 +277,13 @@ function titleChunk(code, extension) {
     handleSignOut: 'Sign the current user out',
     scheduleReminder: 'Validate and save a recurring reminder',
     cancelReminder: 'Delete an active reminder schedule',
-    formatDuration: 'Convert decimal hours into hours and minutes',
-    exportLogs: 'Build and download the filtered CSV export',
+    formatDuration: 'Calculate and format elapsed time from one work-session row',
+    exportLogs: 'Fetch every search match in batches and download its CSV export',
   }
   if (functionName && knownTitles[functionName]) return knownTitles[functionName]
   if (/useState\(/.test(trimmed) || /useRef\(/.test(trimmed)) return 'Initialize the component’s changing values'
   if (/useEffect\(/.test(trimmed)) return 'Run initial asynchronous loading after render'
-  if (/useMemo\(/.test(trimmed)) return 'Derive the searched employee logs'
+  if (/useMemo\(/.test(trimmed)) return 'Derive a value and reuse it until its dependencies change'
   if (/Deno\.env\.get/.test(trimmed)) return 'Read protected Edge Function secrets'
   if (/Deno\.serve/.test(trimmed)) return 'Handle an incoming reminder-processing request'
   if (/for \(const reminder/.test(trimmed)) return 'Process every active reminder schedule'
@@ -290,7 +291,7 @@ function titleChunk(code, extension) {
   if (/^return \(/m.test(trimmed) || /<[A-Za-z]/.test(trimmed)) return 'Render this part of the interface'
   if (/\.from\('logs'\)/.test(trimmed)) return 'Query the work-log table'
   if (/\.from\('email_reminders'\)/.test(trimmed)) return 'Query recurring reminder schedules'
-  if (/\.from\('active_sessions'\)/.test(trimmed)) return 'Query the employee’s active session'
+  if (/\.from\('admin_work_logs'\)/.test(trimmed)) return 'Query the paginated administrator reporting view'
   if (/const csv =/.test(trimmed)) return 'Convert export rows into CSV text'
   if (/new Blob/.test(trimmed)) return 'Create and trigger the CSV browser download'
   if (functionName) return `Calculate or define ${functionName}`
@@ -497,6 +498,8 @@ function syntaxNotes(code, extension) {
   if (/&&/.test(code)) add('&& logical AND', 'The right expression is evaluated only when the left side is truthy. React uses this to render something conditionally.')
   if (/\|\|/.test(code)) add('|| logical OR', 'Uses the left value when it is truthy; otherwise evaluates and returns the right-hand fallback.')
   if (/!!/.test(code)) add('!! boolean conversion', 'The first ! negates truthiness and the second negates again, producing an actual true or false value.')
+  if (/\bBoolean\(/.test(code)) add('Boolean(value)', 'Converts the supplied value into an actual true or false. Here it normalizes a saved overnight field so checkbox state and database output are always Boolean values.')
+  if (/checked=/.test(code)) add('checked={value}', 'Controls whether a checkbox is visibly ticked. React reads the Boolean inside braces; its onChange handler must update that state for the tick to change.')
   if (/useState\(/.test(code)) add('useState(initial)', 'Gives a component persistent state and a setter. Calling the setter schedules a render with the updated state.')
   if (/useRef\(/.test(code)) add('useRef(initial)', 'Returns a persistent object with a current property. Changing current does not trigger a render.')
   if (/useEffect\(/.test(code)) add('useEffect(callback, dependencies)', 'Runs side-effect work after rendering. The dependency array controls repetition; a returned function is cleanup before rerun or unmount.')
@@ -603,12 +606,12 @@ const chapterNames = {
   startup: ['Project setup', 'React startup', 'Authentication state', 'Routes and page selection'],
   auth: ['Form state', 'Input handling', 'Supabase authentication', 'Feedback and rendering'],
   navbar: ['Component inputs', 'Responsive navigation', 'Role-based links', 'User actions'],
-  timekeeping: ['State and current session', 'Loading saved activity', 'Time In workflow', 'Time Out and rendering'],
+  timekeeping: ['State and open log row', 'Loading saved work sessions', 'Time In inserts one row', 'Time Out completes that row'],
   worklog: ['Component inputs', 'Visible-row calculation', 'Log formatting', 'List controls and rendering'],
-  adminlogs: ['Admin state and loading', 'Search and derived rows', 'CSV export', 'Tables and reminder controls'],
+  adminlogs: ['Admin setup and log-query state', 'Debounced server search and pagination', 'Separate batched CSV export', 'Table, count, refresh, and page controls'],
   reminders: ['Reminder form state', 'Loading schedules', 'Creating schedules', 'Removing and displaying schedules'],
   processor: ['Server setup and helpers', 'Load due schedules', 'Claim and send email', 'Record results and respond'],
-  shifts: ['Date helpers and state', 'Load employees and schedules', 'Edit and save baseline', 'Overrides, views, routes, and security'],
+  shifts: ['Date helpers, state, and overnight rules', 'Load employees, baselines, and overrides', 'Bulk or individual baseline editing', 'Exact-date changes, +1 day views, routes, and security'],
   database: ['Tables and relationships', 'Constraints and indexes', 'Triggers and automation', 'Permissions and RLS policies'],
   styling: ['Build configuration', 'Theme and global styles', 'Reusable component styles', 'Responsive and interaction states'],
 }
@@ -799,6 +802,13 @@ const stateMeanings = {
   weekStart: 'weekStart holds the Monday Date used to decide which seven-day week the Shift page displays.',
   selectedBaselineDays: 'selectedBaselineDays holds the weekday numbers selected for applying one shared baseline time.',
   selectedOverrideDates: 'selectedOverrideDates holds the exact YYYY-MM-DD dates selected for applying one shared override time.',
+  baselineOvernight: 'baselineOvernight is the bulk recurring-schedule checkbox. Its true/false value is copied into the overnight property of every selected weekday when Apply is pressed.',
+  overrideOvernight: 'overrideOvernight is the bulk specific-week checkbox. Its true/false value is copied into day.overnight for every selected calendar date when Apply is pressed; saving later writes that value as is_overnight.',
+  refreshNumber: 'refreshNumber is a simple counter used only to rerun the administrator log effect. Clicking Refresh adds one; because it is a dependency, React runs the query again even when page and search stayed unchanged.',
+  debouncedSearch: 'debouncedSearch stores the settled search term after typing has paused for 400 milliseconds. The log query depends on this value, preventing a database request for every keystroke.',
+  page: 'page stores the currently displayed administrator log page, starting at 1. Changing it recalculates the database range and reruns the log query.',
+  totalLogs: 'totalLogs stores the exact number of database rows matching the current server-side search. It is used to calculate totalPages and enable or disable pagination controls.',
+  exporting: 'exporting is true while the separate all-matching-logs export query is running, so the export button can show progress and reject a duplicate click.',
   loading: 'loading tells the current page whether required information is still being fetched, so it can show a loading state instead of incomplete content.',
   isLoading: 'isLoading tells the employee timesheet page that a database action is still running, which helps prevent duplicate clicks.',
   saving: 'saving tells the Shift page that a save request is in progress, so the save control can be disabled and show progress.',
@@ -858,10 +868,15 @@ const knownContracts = {
   getWeekStart: { input: 'Any calendar Date.', work: 'Copies the date, reads its weekday, and moves backward to Monday.', output: 'A new Date representing Monday at the start of that week.' },
   addDays: { input: 'A starting Date and a number of days.', work: 'Copies the date and moves the copy forward or backward.', output: 'A new Date; the original input Date is not changed.' },
   toDateString: { input: 'A JavaScript Date.', work: 'Reads year, month, and day and pads single digits.', output: 'Text in YYYY-MM-DD form, such as 2026-08-26.' },
-  buildWeekSchedule: { input: 'Monday of the week, recurring baseline rows, and exact-date overrides.', work: 'Builds seven dates, prefers an override, otherwise uses the matching weekday baseline.', output: 'Seven complete day objects ready for the screen.' },
+  buildWeekSchedule: { input: 'Monday of the week, recurring baseline rows, and exact-date overrides.', work: 'Builds seven dates, prefers an override, otherwise uses the matching weekday baseline, and copies the saved overnight Boolean into each effective day.', output: 'Seven complete day objects ready for editing or read-only display, including overnight and baseline fallback details.' },
+  hasInvalidShiftTimes: { input: 'Start time, end time, and the overnight true/false value.', work: 'Rejects missing or identical times. Overnight accepts any other pair; same-day work requires the end to be later than the start.', output: 'true when the row should be rejected, otherwise false.' },
   loadSchedule: { input: 'Selected employee and displayed week from current state.', work: 'Requests baseline and override rows from Supabase and converts them into editable screen values.', output: 'Updated baseline and selected-week React state.' },
-  saveBaseline: { input: 'Edited weekday rows.', work: 'Validates times, saves enabled days, and deletes rows representing recurring days off.', output: 'Updated shifts rows plus success/error feedback.' },
-  saveSpecificWeek: { input: 'Seven edited exact dates.', work: 'Saves custom/day-off exceptions and deletes exceptions marked Use baseline.', output: 'Updated shift_overrides rows and refreshed schedule.' },
+  applyBaselineTime: { input: 'Selected weekday numbers plus the shared start, end, and overnight controls.', work: 'Maps all seven baseline rows and replaces only the selected weekdays with the shared values.', output: 'Updated draft baseline state; nothing is saved until Save recurring schedule is pressed.' },
+  updateBaselineDay: { input: 'A weekday number, a property name, and its replacement value.', work: 'Maps the baseline and copies one matching object with a computed [field] property.', output: 'One edited baseline day inside a new seven-day list.' },
+  applyOverrideTime: { input: 'Selected dates plus the shared start, end, and overrideOvernight controls.', work: 'Maps the displayed week and changes only selected dates to custom mode, copying overrideOvernight into each day.overnight.', output: 'Updated week draft state; nothing is saved until Save this week is pressed.' },
+  updateWeekDay: { input: 'An exact date, a field name, and its replacement value.', work: 'Finds the matching displayed day; switching to custom restores its baseline values when possible, while other edits replace [field].', output: 'One changed date inside a new weekSchedule list.' },
+  saveBaseline: { input: 'Edited weekday rows.', work: 'Validates times, saves enabled days with is_overnight, and deletes rows representing recurring days off.', output: 'Updated shifts rows plus success/error feedback.' },
+  saveSpecificWeek: { input: 'Seven edited exact dates.', work: 'Saves custom times, explicit overnight values, and day-off notes; deletes exceptions marked Use baseline.', output: 'Updated shift_overrides rows and refreshed schedule.' },
 }
 
 function functionContract(code) {
@@ -953,7 +968,7 @@ const functionStories = {
   createEmptyBaseline: {
     purpose: 'Prepare a fresh seven-day weekly schedule form before saved shifts are added.',
     analogy: 'Like printing a blank weekly planner with one row already prepared for every day.',
-    steps: ['Read the seven weekday definitions.', 'Create one editable schedule object for each weekday.', 'Start every day as disabled with 09:00–17:00 draft times.', 'Return the new seven-row list.'],
+    steps: ['Read the seven weekday definitions.', 'Create one editable schedule object for each weekday.', 'Start every day as disabled with 09:00–17:00 draft times.', 'Set overnight to false and notes to empty for every blank row.', 'Return the new seven-row list.'],
     example: 'No input → seven editable rows from Monday through Sunday.',
   },
   getWeekStart: {
@@ -977,8 +992,8 @@ const functionStories = {
   buildWeekSchedule: {
     purpose: 'Create the seven final day cards shown for a week by combining normal shifts with exact-date exceptions.',
     analogy: 'Start with the normal weekly planner, then place special sticky notes over dates that are different.',
-    steps: ['Visit Monday through Sunday.', 'Create the exact calendar date for the current list position.', 'Find the normal baseline for that weekday.', 'Find any override for the exact date.', 'Use the override when present; otherwise use the baseline.', 'Return seven complete display objects.'],
-    example: 'Friday baseline 09:00–17:00 + Friday override “day off” → displayed Friday is off.',
+    steps: ['Visit Monday through Sunday.', 'Create the exact calendar date for the current list position.', 'Find the normal baseline for that weekday.', 'Find any override for the exact date.', 'If an override exists, use its custom/day-off mode, times, note, and saved is_overnight Boolean.', 'Otherwise copy the baseline’s enabled, times, and overnight values.', 'Keep baseline fallback fields so changing an override back to custom can restore sensible values.', 'Return seven complete display objects.'],
+    example: 'Friday baseline 09:00–17:00 + Friday override “day off” → displayed Friday is off. A 17:00–05:00 override with is_overnight true displays “+1 day.”',
   },
   loadSchedule: {
     purpose: 'Load the selected employee’s normal weekly shifts and exceptions for the currently displayed week.',
@@ -989,32 +1004,62 @@ const functionStories = {
   saveBaseline: {
     purpose: 'Save the administrator’s normal repeating weekly schedule for one employee.',
     analogy: 'Like replacing the employee’s standard weekly planner, not changing one special date.',
-    steps: ['Validate every enabled day has sensible times.', 'Turn enabled days into database rows.', 'Upsert those working-day rows.', 'Delete old baseline rows for days now marked off.', 'Reload the saved schedule and show feedback.'],
-    example: 'Enable Monday–Friday 09:00–17:00 → five shifts rows.',
+    steps: ['Validate every enabled day has start/end values and they are not equal.', 'Turn enabled days into database rows, including is_overnight and notes.', 'Upsert those working-day rows by employee plus weekday.', 'Delete old baseline rows for days now marked off.', 'Reload the saved schedule and show feedback.'],
+    example: 'Enable Monday–Friday 09:00–17:00 → five shifts rows. Setting Friday overnight true saves that choice in Friday’s row.',
+  },
+  applyBaselineTime: {
+    purpose: 'Copy one shared recurring time and overnight choice into several selected weekdays.',
+    analogy: 'Like selecting Monday through Friday in a planner and using “fill selected” once instead of typing the same hours five times.',
+    steps: ['Require at least one selected weekday.', 'Validate the shared start/end and overnight inputs.', 'Map all baseline rows.', 'For a selected row, copy the row and replace enabled, startTime, endTime, and overnight.', 'Leave every unselected row unchanged.', 'Show a reminder that Apply only changed the draft and Save is still required.'],
+    example: 'Select M/T/W/Th/F + 17:00–05:00 + Overnight → five draft rows receive overnight: true.',
+  },
+  applyOverrideTime: {
+    purpose: 'Copy one custom time and overnight choice into several selected dates in the displayed week.',
+    analogy: 'Like highlighting three dates and attaching the same special-hours note to all three.',
+    steps: ['Require at least one selected date.', 'Validate the shared values.', 'Map all seven displayed day objects.', 'For selected dates, set mode to custom and copy startTime, endTime, and overrideOvernight into day.overnight.', 'Leave other dates unchanged.', 'Wait for Save this week before writing Supabase rows.'],
+    example: 'overrideOvernight = true → selected day.overnight = true → saveSpecificWeek writes is_overnight = true.',
+  },
+  updateBaselineDay: {
+    purpose: 'Change one property on one recurring weekday without rebuilding the rest of the schedule.',
+    analogy: 'Find the Tuesday card, photocopy it with one box changed, and leave the other six cards alone.',
+    steps: ['Receive dayOfWeek, field, and value.', 'Map every current baseline row.', 'Compare each row’s weekday number.', 'Copy the matching row and set the computed property [field] to value.', 'Return all nonmatching rows unchanged.', 'React stores the new list and redraws the form.'],
+    example: "updateBaselineDay(2, 'overnight', true) changes only Tuesday’s overnight property.",
+  },
+  updateWeekDay: {
+    purpose: 'Change the mode, time, overnight choice, or note for one exact calendar date.',
+    analogy: 'Edit one dated card in a seven-card tray while keeping the tray and the other cards.',
+    steps: ['Receive the exact date, field, and value.', 'Map the current week.', 'Return nonmatching dates immediately.', 'When entering custom mode, seed time and overnight from that date’s baseline when available.', 'For ordinary edits, copy the matching day and replace [field].', 'React stores and redraws the new week.'],
+    example: "updateWeekDay('2026-08-28', 'mode', 'off') makes only August 28 a day off; notes can still be edited separately.",
+  },
+  hasInvalidShiftTimes: {
+    purpose: 'Give save/apply handlers one shared yes-or-no validation rule for working shifts.',
+    analogy: 'A gatekeeper checks the form before any draft is applied or sent to Supabase.',
+    steps: ['Reject a missing start or end.', 'Reject identical start and end values.', 'If overnight is true, accept any remaining pair because the end belongs to the next calendar day.', 'Otherwise reject an end that is earlier than or equal to the start.', 'Return false for a valid range.'],
+    example: '17:00–05:00 with overnight true → false (not invalid). The same times with overnight false → true (invalid).',
   },
   saveSpecificWeek: {
     purpose: 'Save exceptions that affect exact calendar dates without rewriting the normal weekly baseline.',
     analogy: 'Like adding or removing sticky notes on individual dates.',
-    steps: ['Inspect each displayed date.', 'Build rows for custom shifts and date-specific days off.', 'Upsert those exception rows.', 'Delete exceptions marked “Use baseline.”', 'Reload the week and show feedback.'],
-    example: 'Aug 28 day off → one shift_overrides row for 2026-08-28.',
+    steps: ['Inspect each displayed date.', 'Keep only dates whose mode is not baseline.', 'For custom mode, save times and Boolean(day.overnight).', 'For day-off mode, save null times, is_overnight false, is_day_off true, and the optional note.', 'Upsert those exception rows.', 'Delete exceptions marked “Use baseline.”', 'Reload the week and show feedback.'],
+    example: 'Aug 28 day off → one shift_overrides row with null times and its note. Aug 29 overnight → custom row with is_overnight true.',
   },
   timeIn: {
-    purpose: 'Start an employee’s current work session and record a permanent Time In activity row.',
-    analogy: 'Open today’s time card, then stamp the arrival time into history.',
-    steps: ['Prevent a duplicate or overlapping click.', 'Capture the current time.', 'Create the active session row.', 'Create the IN log row.', 'Update React state and show success or an error.'],
-    example: 'No active session + click at 08:00 → active session and IN log at 08:00.',
+    purpose: 'Start an employee’s work session by inserting one unfinished logs row.',
+    analogy: 'Open one time card and write its arrival time; the same card will receive its departure time later.',
+    steps: ['Reject an already-open session or overlapping click.', 'Set the immediate processing ref.', 'Capture the current time.', 'Insert one logs row with user_id and time_in; time_out stays null.', 'Store that returned row as activeSession and prepend it to logs.', 'Show feedback and release the processing ref.'],
+    example: 'No open row + click at 08:00 → one logs row whose time_in is 08:00 and time_out is null.',
   },
   timeOut: {
-    purpose: 'Finish the current work session, calculate its length, and store the Time Out history.',
-    analogy: 'Close the open time card, calculate elapsed work, and stamp the departure time.',
-    steps: ['Require an active session.', 'Capture the current time.', 'Calculate elapsed hours from Time In.', 'Create the OUT log.', 'Remove/finish the active session and update the screen.'],
-    example: 'Time In 08:00 + Time Out 17:00 → approximately 9 hours recorded.',
+    purpose: 'Finish the current work session by updating the same logs row.',
+    analogy: 'Find the still-open time card and write the departure time on it rather than creating another card.',
+    steps: ['Require activeSession and reject overlapping clicks.', 'Capture the current time.', 'Update the matching row only when its user_id matches and time_out is still null.', 'Calculate elapsed hours for the success message.', 'Replace that row inside React’s logs list.', 'Set activeSession to null and release the processing ref.'],
+    example: 'The 08:00 open row receives time_out 17:00 and becomes one completed nine-hour session row.',
   },
   exportLogs: {
-    purpose: 'Turn the currently filtered employee logs into a CSV file the browser can download.',
-    analogy: 'Like copying the visible report into a spreadsheet-shaped text file.',
-    steps: ['Create a heading row.', 'Convert every filtered log into export columns.', 'Escape commas and quotation marks safely.', 'Join rows into CSV text.', 'Create a temporary browser file link, click it, then remove it.'],
-    example: 'Three filtered logs → one CSV header plus three CSV data rows.',
+    purpose: 'Retrieve every log matching the current search and turn those results into a CSV download independently of table pagination.',
+    analogy: 'The screen shows one shelf of 20 files, but Export asks the archive for every matching box in batches before building the spreadsheet.',
+    steps: ['Enter exporting state.', 'Request up to 1,000 matching admin_work_logs rows.', 'Append the batch and repeat until a short batch proves the end.', 'Map all collected sessions into employee/date/time/duration/status columns.', 'Escape quotes and join valid CSV text.', 'Create, click, remove, and revoke a temporary browser download link.', 'Always leave exporting state in finally.'],
+    example: '2,350 matches → requests of 1,000, 1,000, and 350 rows → one CSV with 2,350 data rows.',
   },
   scheduleReminder: {
     purpose: 'Validate and save an administrator’s recurring email reminder rule.',

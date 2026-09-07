@@ -36,6 +36,11 @@ React controls what appears in the browser. Supabase provides authentication
 and the Postgres database. RLS is the database security layer that decides which
 rows the signed-in user may read or change.
 
+In the current timekeeping design, one `logs` row represents one whole work
+session. Time In inserts the row with `time_out` still `null`. Time Out updates
+that same row. This is why the employee and administrator interfaces can show
+the shift date, Time In, Time Out, duration, and status together.
+
 ## Important project folders
 
 ```text
@@ -328,7 +333,7 @@ returned.
 
 ```js
 const { data, count, error } = await supabase
-  .from('logs')
+  .from('admin_work_logs')
   .select('*', { count: 'exact' })
   .range(from, to)
 ```
@@ -371,27 +376,52 @@ searchable fields are columns in the same table or view.
 
 ### Why a database view helps search
 
-`logs` stores work-log fields, while names and emails live in `profiles`. A
+`logs` stores work-session fields, while names and emails live in `profiles`. A
 regular related select can display profile values, but applying one `.or(...)`
 across the main table and a nested related table is awkward and unreliable.
 
 A database view can present joined values as one flat result:
 
 ```text
-log_id | user_id | full_name | email | date | time | type
+id | user_id | full_name | email | shift_date | time_in | time_out | search_text
 ```
 
 Then both searchable fields are columns of the selected view:
 
 ```js
 supabase
-  .from('admin_log_view')
+  .from('admin_work_logs')
   .select('*', { count: 'exact' })
-  .or(`full_name.ilike.%${search}%,email.ilike.%${search}%`)
+  .ilike('search_text', `%${search}%`)
 ```
 
 The view does not make one search box behave differently. It makes the database
 result easier and safer to filter, paginate, and export.
+
+The Admin page requests only one 20-row page for the table. Export cannot reuse
+that small `logs` state or it would export only the visible page, so `exportLogs`
+performs a separate query in batches of 1,000 until every matching row has been
+collected.
+
+### Shift baseline, overrides, and overnight
+
+The shift module uses two levels:
+
+```text
+shifts          = normal repeating weekday pattern
+shift_overrides = one exceptional calendar date
+```
+
+For every displayed date, React looks for an override first. If none exists, it
+uses the baseline row with the matching weekday number. A working row stores
+`is_overnight` explicitly. For example, 17:00 to 05:00 with `is_overnight = true`
+means the 05:00 end belongs to the following day, so the interface adds
+`+1 day`. A date-specific day off has null times, `is_day_off = true`, and
+`is_overnight = false`; it may still have a note.
+
+The bulk overnight controls are drafts. `overrideOvernight` is copied into
+`day.overnight` for selected dates when Apply is pressed. `saveSpecificWeek`
+later maps `day.overnight` into the database field `is_overnight`.
 
 ## Authentication and authorization
 
