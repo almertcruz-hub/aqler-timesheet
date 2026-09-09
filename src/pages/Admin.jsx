@@ -15,6 +15,16 @@ const WEEKDAYS = [
 const PAGE_SIZE = 20
 const EXPORT_BATCH_SIZE = 1000
 
+const formatTime = (timestamp) => {
+  if (!timestamp) return '—'
+
+  return new Intl.DateTimeFormat('en-PH', {
+    timeZone: 'Asia/Manila',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(timestamp))
+}
+
 function Admin({ session }) {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
@@ -215,6 +225,20 @@ function Admin({ session }) {
     }).format(new Date(timestamp))
   }
 
+  const formatDateTime = (timestamp) => {
+    if (!timestamp) return ''
+
+    return new Intl.DateTimeFormat('en-PH', {
+      timeZone: 'Asia/Manila',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+    }).format(new Date(timestamp))
+  }
+
   const formatDuration = (log) => {
     if (!log.time_out) return 'In progress'
 
@@ -240,32 +264,55 @@ function Admin({ session }) {
 
       while (true) {
         const to = from + EXPORT_BATCH_SIZE - 1
+
         let query = supabase
-          .from('admin_work_logs')
-          .select('id, user_id, shift_date, time_in, time_out, full_name, email')
+          .from('admin_work_logs_export')
+          .select(`
+            id,
+            user_id,
+            shift_date,
+            time_in,
+            time_out,
+            full_name,
+            email,
+            scheduled_start_at,
+            scheduled_end_at
+          `)
           .order('time_in', { ascending: false })
           .range(from, to)
 
         const exportSearch = search.trim()
 
         if (exportSearch) {
-          query = query.ilike('search_text', `%${exportSearch}%`)
+          query = query.ilike(
+            'search_text',
+            `%${exportSearch}%`
+          )
         }
 
-        const { data, error: exportError } = await query
+        const {
+          data,
+          error: exportError,
+        } = await query
 
-        if (exportError) throw exportError
+        if (exportError) {
+          throw exportError
+        }
 
         const batch = data || []
+
         exportedLogs.push(...batch)
 
-        if (batch.length < EXPORT_BATCH_SIZE) break
+        if (batch.length < EXPORT_BATCH_SIZE) {
+          break
+        }
 
         from += EXPORT_BATCH_SIZE
       }
 
       const escapeCsv = (value) => {
         const text = String(value ?? '')
+
         return `"${text.replaceAll('"', '""')}"`
       }
 
@@ -273,39 +320,67 @@ function Admin({ session }) {
         log.full_name || 'Employee',
         log.email || '',
         log.shift_date || '',
-        formatTime(log.time_in),
-        log.time_out ? formatTime(log.time_out) : '',
+        formatDateTime(log.scheduled_start_at),
+        formatDateTime(log.scheduled_end_at),
+        formatDateTime(log.time_in),
+        formatDateTime(log.time_out),
         formatDuration(log),
         log.time_out ? 'Completed' : 'In progress',
       ])
 
       const csv = [
-        ['Employee', 'Email', 'Shift Date', 'Time In', 'Time Out', 'Duration', 'Status'],
+        [
+          'Employee',
+          'Email',
+          'Shift Date',
+          'Scheduled Shift Start',
+          'Scheduled Shift End',
+          'Actual Time In',
+          'Actual Time Out',
+          'Duration',
+          'Status',
+        ],
         ...rows,
       ]
-        .map((row) => row.map(escapeCsv).join(','))
+        .map((row) =>
+          row.map(escapeCsv).join(',')
+        )
         .join('\r\n')
 
-      const blob = new Blob([`\uFEFF${csv}`], {
-        type: 'text/csv;charset=utf-8',
-      })
+      const blob = new Blob(
+        [`\uFEFF${csv}`],
+        {
+          type: 'text/csv;charset=utf-8',
+        }
+      )
+
       const url = URL.createObjectURL(blob)
       const link = document.createElement('a')
 
       link.href = url
-      link.download = `aqler-work-logs-${new Date().toISOString().slice(0, 10)}.csv`
+
+      link.download =
+        `aqler-work-logs-${
+          new Date().toISOString().slice(0, 10)
+        }.csv`
 
       document.body.appendChild(link)
+
       link.click()
+
       link.remove()
+
       URL.revokeObjectURL(url)
     } catch (exportError) {
-      setError(`Unable to export employee logs: ${exportError.message}`)
+      setError(
+        `Unable to export employee logs: ${
+          exportError.message
+        }`
+      )
     } finally {
       setExporting(false)
     }
   }
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
