@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 import AlertMessage from '../components/AlertMessage'
@@ -16,6 +16,15 @@ function Home({ session }) {
   const timerRef = useRef(null)
   const [isLoading, setIsLoading] = useState(true)
   const isProcessingRef = useRef(false)
+
+  const showAlert = useCallback((msg) => {
+    setAlertMessage(msg)
+    if (timerRef.current) clearTimeout(timerRef.current)
+
+    timerRef.current = setTimeout(() => {
+      setAlertMessage("")
+    }, 5000)
+  }, [])
 
   // ---------------- FETCH DATA ----------------
   useEffect(() => {
@@ -49,17 +58,7 @@ function Home({ session }) {
 
     fetchData()
 
-  }, [user.id])
-
-  // ---------------- ALERT ----------------
-  const showAlert = (msg) => {
-    setAlertMessage(msg)
-    if (timerRef.current) clearTimeout(timerRef.current)
-
-    timerRef.current = setTimeout(() => {
-      setAlertMessage("")
-    }, 5000)
-  }
+  }, [showAlert, user.id])
 
   // Time In Handler
   const timeIn = async () => {
@@ -172,14 +171,19 @@ function Home({ session }) {
         isAdmin={user.app_metadata?.role === 'admin'}
       />
 
-      <div className="px-4 py-6 md:p-8">
-        <h1 className="mb-4 text-2xl font-bold md:mb-6 md:text-4xl">
-          Welcome back, {user.user_metadata?.full_name?.split(' ')[0]}!
-        </h1>
+      <main className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-10">
+        <header className="mb-8">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-blue-300">
+            My Timesheet
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+            Today&apos;s Timesheet
+          </h1>
 
-        <p className="text-lg text-slate-300 mb-8">
-          Here's a quick overview of your timesheet activities.
-        </p>
+          <p className="mt-2 text-slate-400">
+            Record time and review recent work sessions.
+          </p>
+        </header>
 
         <AlertMessage message={alertMessage} />
 
@@ -191,7 +195,7 @@ function Home({ session }) {
         />
 
         <WorkLog logs={logs} />
-      </div>
+      </main>
     </div>
   )
 }

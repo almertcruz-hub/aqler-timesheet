@@ -1,130 +1,162 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
+import { Clock3, UserPlus } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 function Register() {
-  const [fullName, setFullName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [error, setError] = useState("")
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [message, setMessage] = useState('')
+  const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const handleRegister = async () => {
-    setError("")
-
-    if (!fullName || !email || !password || !confirmPassword) {
-      setError("All fields are required.")
-      return
-    }
+  async function handleRegister(event) {
+    event.preventDefault()
+    setMessage('')
+    setSuccess(false)
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match.")
+      setMessage('Passwords do not match.')
       return
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.")
+      setMessage('Password must be at least 6 characters.')
       return
     }
 
     setLoading(true)
 
-    const { error } = await supabase.auth.signUp({
+    const { error: registerError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName }
-      }
+        data: { full_name: fullName.trim() },
+      },
     })
 
-    if (error) setError(error.message)
-    else setError("Account created! Check your email to confirm.")
+    if (registerError) {
+      setMessage(registerError.message)
+    } else {
+      setSuccess(true)
+      setMessage('Account created. Check your email to confirm your account.')
+    }
 
     setLoading(false)
   }
 
+  const inputClasses =
+    'w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white flex items-center justify-center">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 w-full max-w-md">
-
-        <h1 className="text-3xl font-bold mb-2">AQLER <span className="text-blue-300">Timesheet</span></h1>
-        <p className="text-slate-400 text-sm mb-8">Create your account</p>
-
-        {error && (
-          <div className={`mb-4 text-sm p-3 rounded-lg border ${
-            error.includes("created") || error.includes("Check")
-              ? "text-green-400 bg-green-500/10 border-green-500/20"
-              : "text-red-400 bg-red-500/10 border-red-500/20"
-          }`}>
-            {error}
+    <main className="grid min-h-screen place-items-center bg-slate-950 px-4 py-10 text-white">
+      <div className="w-full max-w-md">
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-950/40">
+            <Clock3 size={24} />
           </div>
-        )}
+          <h1 className="text-3xl font-bold tracking-tight">
+            AQLER <span className="text-blue-400">Timesheet</span>
+          </h1>
+          <p className="mt-2 text-sm text-slate-400">
+            Create an employee account.
+          </p>
+        </div>
 
-        <div className="space-y-4">
+        <form
+          onSubmit={handleRegister}
+          className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-black/20 sm:p-8"
+        >
+          {message && (
+            <div
+              role={success ? 'status' : 'alert'}
+              className={`mb-5 rounded-xl border p-3 text-sm ${
+                success
+                  ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300'
+                  : 'border-red-500/20 bg-red-500/10 text-red-300'
+              }`}
+            >
+              {message}
+            </div>
+          )}
 
-          <div>
-            <label className="text-sm text-slate-400 mb-1 block">Full Name</label>
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
-              placeholder="Juan dela Cruz"
-            />
+          <div className="space-y-4">
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-300">Full name</span>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(event) => setFullName(event.target.value)}
+                autoComplete="name"
+                required
+                className={inputClasses}
+                placeholder="Juan dela Cruz"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-300">Email</span>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="email"
+                required
+                className={inputClasses}
+                placeholder="you@example.com"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-300">Password</span>
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="new-password"
+                minLength="6"
+                required
+                className={inputClasses}
+                placeholder="At least 6 characters"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-300">Confirm password</span>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                autoComplete="new-password"
+                minLength="6"
+                required
+                className={inputClasses}
+                placeholder="Enter the same password"
+              />
+            </label>
+
+            <button
+              type="submit"
+              disabled={loading || success}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 font-semibold shadow-lg shadow-blue-950/30 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <UserPlus size={18} />
+              {loading ? 'Creating account...' : success ? 'Account created' : 'Create account'}
+            </button>
           </div>
 
-          <div>
-            <label className="text-sm text-slate-400 mb-1 block">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}  
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-slate-400 mb-1 block">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm text-slate-400 mb-1 block">Confirm Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button
-            onClick={handleRegister}
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-500 transition py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
-          >
-            {loading ? "Creating account..." : "Create Account"}
-          </button>
-
-          <p className="text-center text-sm text-slate-400">
-            Already have an account?{" "}
-            <Link to="/login" className="text-blue-400 hover:text-blue-300 transition">
-              Sign In
+          <p className="mt-6 text-center text-sm text-slate-400">
+            Already have an account?{' '}
+            <Link to="/login" className="font-medium text-blue-400 transition hover:text-blue-300">
+              Sign in
             </Link>
           </p>
+        </form>
 
-        </div>
       </div>
-    </div>
+    </main>
   )
 }
 

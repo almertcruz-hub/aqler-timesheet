@@ -5,7 +5,11 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Admin from './pages/Admin'
+import AdminLayout from './pages/AdminLayout'
 import Shift from './pages/Shift'
+import PayrollConcerns from './pages/PayrollConcerns'
+import ThemeToggle from './components/ThemeToggle'
+import PwaInstallButton from './components/PwaInstallButton'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -24,24 +28,44 @@ function App() {
     return () => subscription.unsubscribe()
   }, [])
 
-  if (loading) return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
-      Loading...
-    </div>
-  )
-
   return (
     <BrowserRouter>
-      <Routes>
+      <ThemeToggle />
+      <PwaInstallButton />
+
+      {loading ? (
+        <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
+          Loading...
+        </div>
+      ) : (
+        <Routes>
         <Route path="/" element={session ? <Home session={session} /> : <Navigate to="/login" />} />
         <Route
           path="/admin"
           element={
             session?.user?.app_metadata?.role === 'admin'
-              ? <Admin session={session} />
+              ? <AdminLayout session={session} />
               : <Navigate to="/" />
           }
-        />
+        >
+          <Route index element={<Navigate to="logs" replace />} />
+          <Route
+            path="logs"
+            element={<Admin session={session} section="logs" embedded />}
+          />
+          <Route
+            path="shifts"
+            element={<Shift session={session} adminMode embedded />}
+          />
+          <Route
+            path="concerns"
+            element={<PayrollConcerns session={session} adminMode embedded />}
+          />
+          <Route
+            path="reminders"
+            element={<Admin session={session} section="reminders" embedded />}
+          />
+        </Route>
         <Route path="/login" element={!session ? <Login /> : <Navigate to="/" />} />
         <Route path="/register" element={!session ? <Register /> : <Navigate to="/" />} />
         <Route
@@ -52,7 +76,14 @@ function App() {
               : <Navigate to="/login" />
           }
         />
-      </Routes>
+        <Route path="/payroll-concerns"
+          element={
+            session ? <PayrollConcerns session={session} />
+            : <Navigate to='/login' />
+          }
+        />
+        </Routes>
+      )}
     </BrowserRouter>
   )
 }

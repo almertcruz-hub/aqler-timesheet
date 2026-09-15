@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="AQLER Timesheet">
+  <rect width="512" height="512" rx="112" fill="#020617"/>
+  <circle cx="256" cy="256" r="154" fill="#0f172a" stroke="#3b82f6" stroke-width="24"/>
+  <path d="M256 158v104l70 42" fill="none" stroke="#f8fafc" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="256" cy="256" r="17" fill="#3b82f6"/>
+  <path d="M138 382h236" stroke="#3b82f6" stroke-width="20" stroke-linecap="round"/>
+</svg>

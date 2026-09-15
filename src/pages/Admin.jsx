@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Bell, Clock3, Download, RefreshCw, Search } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 
@@ -15,17 +16,9 @@ const WEEKDAYS = [
 const PAGE_SIZE = 20
 const EXPORT_BATCH_SIZE = 1000
 
-const formatTime = (timestamp) => {
-  if (!timestamp) return '—'
-
-  return new Intl.DateTimeFormat('en-PH', {
-    timeZone: 'Asia/Manila',
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(new Date(timestamp))
-}
-
-function Admin({ session }) {
+function Admin({ session, section = 'logs', embedded = false }) {
+  const [activeTab, setActiveTab] = useState(section)
+  const displayedTab = embedded ? section : activeTab
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -383,15 +376,61 @@ function Admin({ session }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
-      <Navbar
-        user={session.user}
-        onSignOut={() => supabase.auth.signOut()}
-        isAdmin
-      />
+    <div className={embedded ? '' : 'min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white'}>
+      {!embedded && (
+        <Navbar
+          user={session.user}
+          onSignOut={() => supabase.auth.signOut()}
+          isAdmin
+        />
+      )}
 
-      <main className="mx-auto max-w-7xl p-4 md:p-8">
-        <section className="mb-10 rounded-2xl border border-blue-500/20 bg-blue-500/5 p-6">
+      <div className={embedded ? '' : 'mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-10'}>
+        {!embedded && (
+        <>
+        <header className="mb-7">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-blue-300">
+            Administrator
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
+            Admin Dashboard
+          </h1>
+          <p className="mt-2 text-slate-400">
+            Manage employee work logs and email reminders.
+          </p>
+        </header>
+
+        <div className="mb-6 inline-flex rounded-xl border border-slate-800 bg-slate-900/70 p-1">
+          <button
+            type="button"
+            onClick={() => setActiveTab('logs')}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              displayedTab === 'logs'
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Clock3 size={16} />
+            Work logs
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('reminders')}
+            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition ${
+              displayedTab === 'reminders'
+                ? 'bg-blue-600 text-white'
+                : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <Bell size={16} />
+            Email reminders
+          </button>
+        </div>
+        </>
+        )}
+
+        {displayedTab === 'reminders' && (
+        <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl shadow-black/10 md:p-6">
           <div className="mb-5">
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-300">Email reminders</p>
             <h1 className="mt-1 text-2xl font-bold">Schedule an employee reminder</h1>
@@ -404,7 +443,7 @@ function Admin({ session }) {
               <select
                 value={reminder.userId}
                 onChange={(event) => setReminder((current) => ({ ...current, userId: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-white"
+                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               >
                 <option value="">Select an employee</option>
                 {employees.map((employee) => (
@@ -421,7 +460,7 @@ function Admin({ session }) {
                 type="time"
                 value={reminder.reminderTime}
                 onChange={(event) => setReminder((current) => ({ ...current, reminderTime: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-white"
+                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white [color-scheme:dark] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               />
             </label>
 
@@ -458,7 +497,7 @@ function Admin({ session }) {
               <input
                 value={reminder.subject}
                 onChange={(event) => setReminder((current) => ({ ...current, subject: event.target.value }))}
-                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-white"
+                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               />
             </label>
 
@@ -468,14 +507,14 @@ function Admin({ session }) {
                 value={reminder.message}
                 onChange={(event) => setReminder((current) => ({ ...current, message: event.target.value }))}
                 rows="3"
-                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2.5 text-white"
+                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-2.5 text-white outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               />
             </label>
 
             <div className="flex items-center gap-4 md:col-span-2">
               <button
                 disabled={savingReminder}
-                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold hover:bg-blue-500 disabled:opacity-50"
+                className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold shadow-lg shadow-blue-950/30 hover:bg-blue-500 disabled:opacity-50"
               >
                 {savingReminder ? 'Scheduling...' : 'Schedule email'}
               </button>
@@ -544,7 +583,10 @@ function Admin({ session }) {
             </div>
           </div>
         </section>
+        )}
 
+        {displayedTab === 'logs' && (
+        <>
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
           <div>
             <p className="text-sm font-semibold uppercase tracking-widest text-blue-300 mb-2">Admin</p>
@@ -559,8 +601,9 @@ function Admin({ session }) {
                 setPage(1)
                 setRefreshNumber((current) => current + 1)
               }}
-              className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-semibold text-slate-300 transition hover:bg-slate-800"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-semibold text-slate-300 transition hover:bg-slate-800"
             >
+              <RefreshCw size={16} />
               Refresh
             </button>
 
@@ -568,18 +611,23 @@ function Admin({ session }) {
               type="button"
               onClick={exportLogs}
               disabled={totalLogs === 0 || exporting}
-              className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold transition hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
+              <Download size={16} />
               {exporting ? 'Exporting...' : 'Export CSV'}
             </button>
 
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search employee, email, or date"
-              className="w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none sm:w-80"
-            />
+            <label className="relative w-full sm:w-80">
+              <span className="sr-only">Search employee logs</span>
+              <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search employee, email, or date"
+                className="w-full rounded-xl border border-slate-700 bg-slate-900 py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+              />
+            </label>
           </div>
         </div>
 
@@ -637,8 +685,8 @@ function Admin({ session }) {
                       <td className="px-5 py-4">
                         <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                           isActive
-                            ? 'bg-amber-500/10 text-amber-300'
-                            : 'bg-green-500/10 text-green-300'
+                            ? 'border border-amber-500/20 bg-amber-500/10 text-amber-300'
+                            : 'admin-completed-badge border border-green-500/20 bg-green-500/10 text-green-300'
                         }`}>
                           {isActive ? 'In progress' : 'Completed'}
                         </span>
@@ -690,7 +738,9 @@ function Admin({ session }) {
             </div>
           )}
         </div>
-      </main>
+        </>
+        )}
+      </div>
     </div>
   )
 }

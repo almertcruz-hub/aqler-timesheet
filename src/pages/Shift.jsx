@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { CalendarDays, CalendarRange, Eye, RefreshCw, Repeat2, UserRound } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 
@@ -22,13 +23,6 @@ function createEmptyBaseline() {
     notes: '',
     shiftId: null,
   }))
-}
-
-function getToday() {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Manila',
-    year: 'numeric'
-  })
 }
 
 function getWeekStart(date) {
@@ -142,8 +136,9 @@ function hasInvalidShiftTimes(startTime, endTime, overnight) {
   return endTime <= startTime
 }
 
-function Shift({ session }) {
-  const isAdmin = session.user.app_metadata?.role === 'admin'
+function Shift({ session, adminMode = false, embedded = false }) {
+  const hasAdminRole = session.user.app_metadata?.role === 'admin'
+  const isAdmin = adminMode && hasAdminRole
 
   const [activeTab, setActiveTab] = useState(
     isAdmin ? 'baseline' : 'week'
@@ -177,8 +172,8 @@ function Shift({ session }) {
 
   const [baselineOvernight, setBaselineOvernight] = useState(false)
   const [overrideOvernight, setOverrideOvernight] = useState(false)
-
-  const [disableButton, setDisableButton] = useState(false)
+  const [baselineDirty, setBaselineDirty] = useState(false)
+  const [weekDirty, setWeekDirty] = useState(false)
 
   useEffect(() => {
     if (!isAdmin) return
@@ -298,7 +293,13 @@ function Shift({ session }) {
   }, [selectedEmployeeId, weekStart])
 
   useEffect(() => {
-    loadSchedule()
+    const timer = window.setTimeout(() => {
+      loadSchedule()
+    }, 0)
+
+    return () => {
+      window.clearTimeout(timer)
+    }
   }, [loadSchedule])
 
   function toggleBaselineDay(dayOfWeek) {
@@ -344,6 +345,7 @@ function Shift({ session }) {
           : day
       )
     )
+    setBaselineDirty(true)
 
     setMessage(
       'Times applied. Press Save recurring schedule to save them.'
@@ -351,6 +353,7 @@ function Shift({ session }) {
   }
 
   function updateBaselineDay(dayOfWeek, field, value) {
+    setBaselineDirty(true)
     setBaseline((currentBaseline) =>
       currentBaseline.map((day) =>
         day.dayOfWeek === dayOfWeek
@@ -444,15 +447,21 @@ function Shift({ session }) {
     await loadSchedule()
 
     setMessage('Recurring schedule saved successfully.')
+    setBaselineDirty(false)
     setSaving(false)
   }
 
   function changeWeek(numberOfWeeks) {
+    if (weekDirty && !window.confirm('Discard unsaved changes for this week?')) {
+      return
+    }
+
     setWeekStart((currentWeek) =>
       addDays(currentWeek, numberOfWeeks * 7)
     )
 
     setSelectedOverrideDates([])
+    setWeekDirty(false)
     setMessage('')
   }
 
@@ -498,6 +507,7 @@ function Shift({ session }) {
           : day
       )
     )
+    setWeekDirty(true)
 
     setMessage(
       'Custom times applied. Press Save this week to save them.'
@@ -505,6 +515,7 @@ function Shift({ session }) {
   }
 
   function updateWeekDay(date, field, value) {
+    setWeekDirty(true)
     setWeekSchedule((currentSchedule) =>
       currentSchedule.map((day) => {
         if (day.date !== date) return day
@@ -617,7 +628,41 @@ function Shift({ session }) {
 
     setSelectedOverrideDates([])
     setMessage('Specific-date schedule saved successfully.')
+    setWeekDirty(false)
     setSaving(false)
+  }
+
+  function changeEmployee(employeeId) {
+    if (
+      (baselineDirty || weekDirty) &&
+      !window.confirm('Discard unsaved schedule changes?')
+    ) {
+      return
+    }
+
+    setSelectedEmployeeId(employeeId)
+    setSelectedOverrideDates([])
+    setBaselineDirty(false)
+    setWeekDirty(false)
+    setMessage('')
+  }
+
+  function changeTab(nextTab) {
+    const hasUnsavedChanges =
+      (activeTab === 'baseline' && baselineDirty) ||
+      (activeTab === 'week' && weekDirty)
+
+    if (
+      hasUnsavedChanges &&
+      !window.confirm('Discard unsaved schedule changes?')
+    ) {
+      return
+    }
+
+    setActiveTab(nextTab)
+    setBaselineDirty(false)
+    setWeekDirty(false)
+    setMessage('')
   }
 
   const selectedEmployee = employees.find(
@@ -625,23 +670,32 @@ function Shift({ session }) {
   )
 
   const weekEnd = addDays(weekStart, 6)
+  const normalizedMessage = message.toLowerCase()
+  const messageClasses = normalizedMessage.includes('successfully')
+    ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-200'
+    : normalizedMessage.startsWith('unable')
+      ? 'border-red-500/20 bg-red-500/10 text-red-200'
+      : 'border-amber-500/20 bg-amber-500/10 text-amber-200'
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
-      <Navbar
-        user={session.user}
-        onSignOut={() => supabase.auth.signOut()}
-        isAdmin={isAdmin}
-      />
+    <div className={embedded ? '' : 'min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white'}>
+      {!embedded && (
+        <Navbar
+          user={session.user}
+          onSignOut={() => supabase.auth.signOut()}
+          isAdmin={hasAdminRole}
+        />
+      )}
 
-      <main className="mx-auto max-w-6xl p-4 md:p-8">
+      <div className={embedded ? '' : 'mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-10'}>
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-blue-300">
+            <p className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-blue-300">
+              <CalendarDays size={16} />
               Shift management
             </p>
 
-            <h1 className="text-3xl font-bold md:text-4xl">
+            <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
               Employee Schedule
             </h1>
 
@@ -657,17 +711,16 @@ function Shift({ session }) {
           </div>
 
           {isAdmin && (
-            <label className="w-full text-sm text-slate-300 md:w-96">
-              Employee
+            <label className="w-full rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-300 shadow-xl shadow-black/10 md:w-96">
+              <span className="flex items-center gap-2 font-medium text-slate-200">
+                <UserRound size={16} className="text-blue-300" />
+                Employee
+              </span>
 
               <select
                 value={selectedEmployeeId}
-                onChange={(event) => {
-                  setSelectedEmployeeId(event.target.value)
-                  setSelectedOverrideDates([])
-                  setMessage('')
-                }}
-                className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-white"
+                onChange={(event) => changeEmployee(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               >
                 <option value="">Select an employee</option>
 
@@ -686,7 +739,7 @@ function Shift({ session }) {
         </div>
 
         {selectedEmployee && (
-          <div className="mb-5">
+          <div className="mb-5 rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-3">
             <p className="font-semibold">
               {selectedEmployee.full_name || 'Employee'}
             </p>
@@ -698,47 +751,50 @@ function Shift({ session }) {
         )}
 
         {message && (
-          <div className="mb-6 rounded-lg border border-blue-500/20 bg-blue-500/10 p-4 text-sm text-blue-200">
+          <div className={`mb-6 rounded-xl border p-4 text-sm ${messageClasses}`}>
             {message}
           </div>
         )}
 
         {isAdmin && (
-          <div className="mb-6 flex flex-wrap gap-2 border-b border-slate-800 pb-4">
+          <div className="mb-6 inline-flex max-w-full flex-wrap gap-1 rounded-xl border border-slate-800 bg-slate-900/70 p-1">
             <button
               type="button"
-              onClick={() => setActiveTab('baseline')}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+              onClick={() => changeTab('baseline')}
+              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition ${
                 activeTab === 'baseline'
                   ? 'bg-blue-600 text-white'
                   : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
               }`}
             >
-              Recurring baseline
+              <Repeat2 size={16} />
+              Weekly Schedule
             </button>
 
             <button
               type="button"
-              onClick={() => setActiveTab('week')}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+              onClick={() => changeTab('week')}
+              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition ${
                 activeTab === 'week'
                   ? 'bg-blue-600 text-white'
                   : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
               }`}
             >
-              Specific week
+              <CalendarRange size={16} />
+              Schedule Changes
             </button>
 
             <button
               type="button"
-              onClick={() => setActiveTab('view')}
-              className={`rounded-lg px-4 py-2 text-sm font-semibold ${
+              onClick={() => changeTab('view')}
+              className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition ${
                 activeTab === 'view'
                   ? 'bg-blue-600 text-white'
                   : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
               }`}
             >
-              View schedule
+              <Eye size={16} />
+              Employee View
             </button>
           </div>
         )}
@@ -751,6 +807,7 @@ function Shift({ session }) {
 
         {loading ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-12 text-center text-slate-400">
+            <RefreshCw className="mx-auto mb-3 animate-spin" size={24} />
             Loading schedule...
           </div>
         ) : (
@@ -759,7 +816,7 @@ function Shift({ session }) {
               <form onSubmit={saveBaseline}>
                 <div className="mb-6 rounded-2xl border border-blue-500/30 bg-blue-500/5 p-5">
                   <h2 className="text-xl font-semibold">
-                    Set matching weekdays
+                    Apply hours to multiple days
                   </h2>
 
                   <p className="mt-1 text-sm text-slate-400">
@@ -805,7 +862,7 @@ function Shift({ session }) {
                             event.target.value
                           )
                         }
-                        className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                        className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white [color-scheme:dark] outline-none focus:border-blue-500"
                       />
                     </label>
 
@@ -820,7 +877,7 @@ function Shift({ session }) {
                             event.target.value
                           )
                         }
-                        className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                        className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white [color-scheme:dark] outline-none focus:border-blue-500"
                       />
                     </label>
 
@@ -860,12 +917,26 @@ function Shift({ session }) {
                     )
 
                     return (
-                      <section
+                      <details
                         key={weekday.value}
-                        className="border-b border-slate-800 p-5 last:border-b-0"
+                        className="group border-b border-slate-800 last:border-b-0"
                       >
-                        <div className="grid gap-4 md:grid-cols-[160px_1fr] md:items-center">
-                          <label className="flex items-center gap-3 font-semibold">
+                        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 transition hover:bg-slate-800/40">
+                          <div>
+                            <p className="font-semibold text-slate-100">{weekday.label}</p>
+                            <p className="mt-1 text-sm text-slate-500">
+                              {day.enabled
+                                ? `${day.startTime} – ${day.endTime}${day.overnight ? ' (+1 day)' : ''}`
+                                : 'Day off'}
+                            </p>
+                          </div>
+                          <span className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 group-open:bg-slate-800">
+                            Edit
+                          </span>
+                        </summary>
+
+                        <div className="border-t border-slate-800 bg-slate-950/30 p-5">
+                          <label className="mb-5 flex w-fit items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 text-sm font-medium text-slate-200">
                             <input
                               type="checkbox"
                               checked={day.enabled}
@@ -876,106 +947,90 @@ function Shift({ session }) {
                                   event.target.checked
                                 )
                               }
-                              className="h-5 w-5"
+                              className="h-4 w-4 accent-blue-500"
                             />
-
-                            {weekday.label}
+                            Working day
                           </label>
 
                           {day.enabled ? (
                             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                               <label className="text-sm text-slate-300">
                                 Start
-
                                 <input
                                   type="time"
                                   value={day.startTime}
                                   onChange={(event) =>
-                                    updateBaselineDay(
-                                      weekday.value,
-                                      'startTime',
-                                      event.target.value
-                                    )
+                                    updateBaselineDay(weekday.value, 'startTime', event.target.value)
                                   }
-                                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white [color-scheme:dark] outline-none focus:border-blue-500"
                                 />
                               </label>
 
                               <label className="text-sm text-slate-300">
                                 End
-
                                 <input
                                   type="time"
                                   value={day.endTime}
                                   onChange={(event) =>
-                                    updateBaselineDay(
-                                      weekday.value,
-                                      'endTime',
-                                      event.target.value
-                                    )
+                                    updateBaselineDay(weekday.value, 'endTime', event.target.value)
                                   }
-                                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white [color-scheme:dark] outline-none focus:border-blue-500"
                                 />
                               </label>
 
                               <label className="text-sm text-slate-300 sm:col-span-2 lg:col-span-1">
                                 Notes
-
                                 <input
                                   value={day.notes}
                                   onChange={(event) =>
-                                    updateBaselineDay(
-                                      weekday.value,
-                                      'notes',
-                                      event.target.value
-                                    )
+                                    updateBaselineDay(weekday.value, 'notes', event.target.value)
                                   }
                                   placeholder="Optional"
-                                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white outline-none focus:border-blue-500"
                                 />
                               </label>
 
-                              <label className="mt-6 flex h-10 w-fit items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-slate-300">
+                              <label className="mt-6 flex h-10 w-fit items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-slate-300">
                                 <input
                                   type="checkbox"
                                   checked={day.overnight}
-                                  onChange={(event) => {
-                                    updateBaselineDay(
-                                      day.dayOfWeek,
-                                      'overnight',
-                                      event.target.checked
-                                    )
-                                  }}
+                                  onChange={(event) =>
+                                    updateBaselineDay(day.dayOfWeek, 'overnight', event.target.checked)
+                                  }
                                   className="h-4 w-4 accent-blue-500"
                                 />
-
-                                <span className="block text-sm font-medium text-white">
-                                    Ends next day
-                                </span>
-
+                                Ends next day
                               </label>
-
                             </div>
                           ) : (
                             <p className="text-sm text-slate-500">
-                              Recurring day off
+                              This weekday is set as a day off.
                             </p>
                           )}
                         </div>
-                      </section>
+                      </details>
                     )
                   })}
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={saving || !selectedEmployeeId}
-                  className="mt-6 rounded-lg bg-blue-600 px-5 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50"
-                >
-                  {saving
-                    ? 'Saving...'
-                    : 'Save recurring schedule'}
-                </button>
+                <div className="sticky bottom-4 z-20 mt-6 flex flex-col gap-3 rounded-2xl border border-slate-700 bg-slate-950/95 p-4 shadow-2xl shadow-black/30 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="font-medium text-slate-100">
+                      {baselineDirty ? 'Unsaved weekly changes' : 'Weekly schedule is up to date'}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Changes apply to the selected employee after you save.
+                    </p>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={saving || !selectedEmployeeId || !baselineDirty}
+                    className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+                  >
+                    {saving ? 'Saving...' : 'Save weekly schedule'}
+                  </button>
+                </div>
               </form>
             )}
 
@@ -997,7 +1052,7 @@ function Shift({ session }) {
                     </h2>
 
                     <p className="mt-1 text-sm text-slate-500">
-                      Exact-date schedule
+                      Selected week
                     </p>
                   </div>
 
@@ -1013,7 +1068,7 @@ function Shift({ session }) {
                 {isAdmin && activeTab === 'week' && (
                   <div className="mb-6 rounded-2xl border border-blue-500/30 bg-blue-500/5 p-5">
                     <h2 className="text-xl font-semibold">
-                      Set matching dates
+                      Apply hours to selected dates
                     </h2>
 
                     <p className="mt-1 text-sm text-slate-400">
@@ -1065,7 +1120,7 @@ function Shift({ session }) {
                               event.target.value
                             )
                           }
-                          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                          className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white [color-scheme:dark] outline-none focus:border-blue-500"
                         />
                       </label>
 
@@ -1080,7 +1135,7 @@ function Shift({ session }) {
                               event.target.value
                             )
                           }
-                          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                          className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white [color-scheme:dark] outline-none focus:border-blue-500"
                         />
                       </label>
 
@@ -1132,50 +1187,53 @@ function Shift({ session }) {
                         ? day.overnight
                         : day.baselineOvernight
 
-                    return (
-                      <section
-                        key={day.date}
-                        className="border-b border-slate-800 p-5 last:border-b-0"
-                      >
-                        <div className="grid gap-4 md:grid-cols-[180px_1fr] md:items-center">
-                          <div>
-                            <p className="font-semibold">
-                              {day.dayLabel}
-                            </p>
+                    if (isAdmin && activeTab === 'week') {
+                      const scheduleSummary = effectiveDayOff
+                        ? 'Day off'
+                        : `${effectiveStart} – ${effectiveEnd}${effectiveOvernight ? ' (+1 day)' : ''}`
 
-                            <p className="text-sm text-slate-500">
-                              {formatDate(day.date)}
-                            </p>
-                          </div>
+                      return (
+                        <details
+                          key={day.date}
+                          className="group border-b border-slate-800 last:border-b-0"
+                        >
+                          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 transition hover:bg-slate-800/40">
+                            <div>
+                              <p className="font-semibold text-slate-100">{day.dayLabel}</p>
+                              <p className="mt-1 text-sm text-slate-500">{formatDate(day.date)}</p>
+                            </div>
 
-                          {isAdmin && activeTab === 'week' ? (
-                            <div className="grid gap-4 lg:grid-cols-[180px_1fr]">
+                            <div className="flex items-center gap-3 text-right">
+                              <div>
+                                <p className="text-sm font-medium text-slate-200">{scheduleSummary}</p>
+                                <p className="mt-1 text-xs text-slate-500">
+                                  {day.mode === 'custom'
+                                    ? 'Schedule change'
+                                    : day.mode === 'off'
+                                      ? 'Day off change'
+                                      : 'Weekly schedule'}
+                                </p>
+                              </div>
+                              <span className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-300 group-open:bg-slate-800">
+                                Edit
+                              </span>
+                            </div>
+                          </summary>
+
+                          <div className="border-t border-slate-800 bg-slate-950/30 p-5">
+                            <div className="grid gap-4 lg:grid-cols-[190px_1fr]">
                               <label className="text-sm text-slate-300">
-                                Schedule type
-
+                                Schedule for this date
                                 <select
                                   value={day.mode}
                                   onChange={(event) =>
-                                    updateWeekDay(
-                                      day.date,
-                                      'mode',
-                                      event.target.value
-                                    )
+                                    updateWeekDay(day.date, 'mode', event.target.value)
                                   }
-                                  className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                                  className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none focus:border-blue-500"
                                 >
-                                  <option value="baseline">
-                                    Use baseline
-                                  </option>
-
-                                  <option value="custom">
-                                    Custom time
-                                  </option>
-
-                                  <option value="off">
-                                    Day off
-                                  </option>
-                                  
+                                  <option value="baseline">Use weekly hours</option>
+                                  <option value="custom">Use different hours</option>
+                                  <option value="off">Day off</option>
                                 </select>
                               </label>
 
@@ -1183,139 +1241,116 @@ function Shift({ session }) {
                                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                                   <label className="text-sm text-slate-300">
                                     Start
-
                                     <input
                                       type="time"
                                       value={day.startTime}
                                       onChange={(event) =>
-                                        updateWeekDay(
-                                          day.date,
-                                          'startTime',
-                                          event.target.value
-                                        )
+                                        updateWeekDay(day.date, 'startTime', event.target.value)
                                       }
-                                      className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                                      className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white [color-scheme:dark] outline-none focus:border-blue-500"
                                     />
                                   </label>
 
                                   <label className="text-sm text-slate-300">
                                     End
-
                                     <input
                                       type="time"
                                       value={day.endTime}
                                       onChange={(event) =>
-                                        updateWeekDay(
-                                          day.date,
-                                          'endTime',
-                                          event.target.value
-                                        )
+                                        updateWeekDay(day.date, 'endTime', event.target.value)
                                       }
-                                      className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                                      className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white [color-scheme:dark] outline-none focus:border-blue-500"
                                     />
                                   </label>
 
                                   <label className="text-sm text-slate-300 sm:col-span-2 lg:col-span-1">
                                     Notes
-
                                     <input
                                       value={day.notes}
                                       onChange={(event) =>
-                                        updateWeekDay(
-                                          day.date,
-                                          'notes',
-                                          event.target.value
-                                        )
+                                        updateWeekDay(day.date, 'notes', event.target.value)
                                       }
                                       placeholder="Optional"
-                                      className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                                      className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none focus:border-blue-500"
                                     />
                                   </label>
 
-                                  <label className="mt-6 flex h-10 w-fit items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-slate-300">
+                                  <label className="mt-6 flex h-11 w-fit items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-3 text-sm text-slate-300">
                                     <input
                                       type="checkbox"
                                       checked={day.overnight || false}
-                                      onChange={(event) => {
-                                        updateWeekDay(
-                                          day.date,
-                                          'overnight',
-                                          event.target.checked
-                                        )
-                                      }}
+                                      onChange={(event) =>
+                                        updateWeekDay(day.date, 'overnight', event.target.checked)
+                                      }
                                       className="h-4 w-4 accent-blue-500"
                                     />
-
-                                    <span>Ends next day</span>
-                                </label>
+                                    Ends next day
+                                  </label>
                                 </div>
                               )}
 
                               {day.mode === 'baseline' && (
-                                <div className="flex items-center text-sm text-slate-400">
+                                <div className="flex items-center rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
                                   {day.baselineEnabled
-                                    ? `${day.baselineStartTime} – ${day.baselineEndTime}${day.baselineOvernight ? ' (+1 day)' : ''} from baseline`
-                                    : 'Day off from baseline'}
+                                    ? `${day.baselineStartTime} – ${day.baselineEndTime}${day.baselineOvernight ? ' (+1 day)' : ''} from the weekly schedule`
+                                    : 'This is a day off in the weekly schedule.'}
                                 </div>
                               )}
 
                               {day.mode === 'off' && (
-                                <div className="grid gap-3">
-                                  <p className="text-sm text-slate-500">
-                                    No shift on this date
-                                  </p>
-
-                                  <label className="text-sm text-slate-300">
-                                    Day-off Notes
-
-                                    <input
-                                      value={day.notes}
-                                      onChange={(event) => {
-                                        updateWeekDay(
-                                          day.date,
-                                          'notes', event.target.value
-                                        )
-                                      }}
-                                      placeholder="Example: On Vacation Leave"
-                                      className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-650 px-3 py-2 text-white"
-                                    />
-                                  </label>
-                      
-                                </div>
+                                <label className="text-sm text-slate-300">
+                                  Day-off notes
+                                  <input
+                                    value={day.notes}
+                                    onChange={(event) =>
+                                      updateWeekDay(day.date, 'notes', event.target.value)
+                                    }
+                                    placeholder="Example: Vacation leave"
+                                    className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none focus:border-blue-500"
+                                  />
+                                </label>
                               )}
                             </div>
-                          ) : (
-                            <div>
-                              {effectiveDayOff ? (
-                                <p className="text-slate-500">
-                                  Day off
-                                </p>
-                              ) : (
-                                <p className="font-medium text-slate-200">
-                                  {effectiveStart} – {effectiveEnd}
-                                  {effectiveOvernight && (
-                                    <span className="ml-2 text-blue-400">
-                                      +1 day
-                                    </span>
-                                  )}
-                                </p>
-                              )}
+                          </div>
+                        </details>
+                      )
+                    }
 
-                              <p className="mt-1 text-xs text-slate-500">
-                                {day.mode === 'custom'
-                                  ? 'Custom schedule'
-                                  : day.mode === 'off'
-                                    ? 'Date-specific day off'
-                                    : 'Recurring baseline'}
+                    return (
+                      <section
+                        key={day.date}
+                        className="border-b border-slate-800 px-5 py-4 last:border-b-0"
+                      >
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="font-semibold text-slate-100">{day.dayLabel}</p>
+                            <p className="text-sm text-slate-500">{formatDate(day.date)}</p>
+                          </div>
+
+                          <div className="sm:text-right">
+                            {effectiveDayOff ? (
+                              <p className="text-slate-500">Day off</p>
+                            ) : (
+                              <p className="font-medium text-slate-200">
+                                {effectiveStart} – {effectiveEnd}
+                                {effectiveOvernight && (
+                                  <span className="ml-2 text-blue-400">+1 day</span>
+                                )}
                               </p>
+                            )}
 
-                              {day.notes && (
-                                <p className="mt-2 text-sm text-slate-400">
-                                  {day.notes}
-                                </p>
-                              )}
-                            </div>
-                          )}
+                            <p className="mt-1 text-xs text-slate-500">
+                              {day.mode === 'custom'
+                                ? 'Schedule change'
+                                : day.mode === 'off'
+                                  ? 'Day off change'
+                                  : 'Weekly schedule'}
+                            </p>
+
+                            {day.notes && (
+                              <p className="mt-2 text-sm text-slate-400">{day.notes}</p>
+                            )}
+                          </div>
                         </div>
                       </section>
                     )
@@ -1323,19 +1358,30 @@ function Shift({ session }) {
                 </div>
 
                 {isAdmin && activeTab === 'week' && (
-                  <button
-                    type="submit"
-                    disabled={saving || !selectedEmployeeId}
-                    className="mt-6 rounded-lg bg-blue-600 px-5 py-3 font-semibold hover:bg-blue-500 disabled:opacity-50"
-                  >
-                    {saving ? 'Saving...' : 'Save this week'}
-                  </button>
+                  <div className="sticky bottom-4 z-20 mt-6 flex flex-col gap-3 rounded-2xl border border-slate-700 bg-slate-950/95 p-4 shadow-2xl shadow-black/30 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-medium text-slate-100">
+                        {weekDirty ? 'Unsaved changes for this week' : 'This week is up to date'}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Only dates changed from the weekly schedule are stored separately.
+                      </p>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={saving || !selectedEmployeeId || !weekDirty}
+                      className="rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-slate-800 disabled:text-slate-500"
+                    >
+                      {saving ? 'Saving...' : 'Save schedule changes'}
+                    </button>
+                  </div>
                 )}
               </form>
             )}
           </>
         )}
-      </main>
+      </div>
     </div>
   )
 }

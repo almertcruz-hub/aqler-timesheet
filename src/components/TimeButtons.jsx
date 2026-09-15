@@ -65,16 +65,18 @@ function TimeButtons({
 
 
   return (
-    <section className="mx-auto mb-10 max-w-4xl rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/10 md:p-8">
+    <section className="mb-10 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 shadow-2xl shadow-black/15">
+      <div className={`h-1 w-full ${isWorking ? 'bg-emerald-500' : 'bg-blue-500'}`} />
+      <div className="p-5 md:p-8">
       <div className="flex flex-col gap-6">
-        <div className="flex gap-3 flex-col justify-between sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div>
 
-            <h4 className="text-xl font-semibold uppercase tracking-widest text-slate-400">
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400">
               Today's Timesheet
-            </h4>
+            </h2>
 
-            <p className="mt-1 text-m text-slate-400">
+            <p className="mt-1 text-sm text-slate-500">
               {formatCurrentDate(currentTime)}
             </p>
 
@@ -99,54 +101,60 @@ function TimeButtons({
           )}
         </div>
 
-        <div className="py-4 text-center">
+        <div className="grid items-center gap-7 py-4 md:grid-cols-[1fr_auto] md:text-left">
+          <div className="text-center md:text-left">
           {isWorking ? (
             <>
               <p
-                className="text-5xl font-semibold tracking-tight text-white tabular-nums md:text-7xl"
+                className="text-5xl font-semibold tracking-tight text-white tabular-nums md:text-6xl"
                 aria-live="polite"
               >
                 {formatElapsed(activeTimeIn, currentTime)}
               </p>
 
               <p className="mt-3 text-sm text-slate-400 md:text-base">
-                Started at {formatCurrentTime(activeTimeIn)}
+                Session started at <span className="font-medium text-slate-200">{formatCurrentTime(activeTimeIn)}</span>
               </p>
             </>
           ) : (
             <>
-              <p className="text-5xl font-semibold tracking-tight text-white md:text-7xl">
+              <p className="text-5xl font-semibold tracking-tight text-white tabular-nums md:text-6xl">
                 {formatCurrentTime(currentTime)}
               </p>
 
               <p className="mt-3 text-sm text-slate-400 md:text-base">
-                {formatCurrentDate(currentTime)}
+                Current time
               </p>
             </>
           )}
-        </div>
+          </div>
 
-        {isWorking ? (
-          <button
-            type="button"
-            onClick={onTimeOut}
-            disabled={isLoading}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-amber-600 px-6 font-semibold text-white transition hover:bg-amber-500 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <LogOut size={19} />
-            {isLoading ? 'Please wait...' : 'Time Out'}
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={onTimeIn}
-            disabled={isLoading}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-teal-600 px-6 font-semibold text-white transition hover:bg-teal-500 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <LogIn size={19} />
-            {isLoading ? 'Please wait...' : 'Time In'}
-          </button>
-        )}
+          <div className="md:w-52">
+            {isWorking ? (
+              <button
+                type="button"
+                onClick={onTimeOut}
+                disabled={isLoading}
+                className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-red-600 px-6 font-semibold text-white shadow-lg shadow-red-950/30 transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <LogOut size={19} />
+                {isLoading ? 'Please wait...' : 'Time Out'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onTimeIn}
+                disabled={isLoading}
+                className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 font-semibold text-white shadow-lg shadow-blue-950/30 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <LogIn size={19} />
+                {isLoading ? 'Please wait...' : 'Time In'}
+              </button>
+            )}
+
+          </div>
+        </div>
+      </div>
       </div>
     </section>
     )

@@ -1,76 +1,100 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
 import { Link } from 'react-router-dom'
+import { Clock3, LogIn } from 'lucide-react'
+import { supabase } from '../lib/supabase'
 
 function Login() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleLogin = async () => {
+  async function handleLogin(event) {
+    event.preventDefault()
     setLoading(true)
-    setError("")
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError(error.message)
+    setError('')
+
+    const { error: loginError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (loginError) setError(loginError.message)
     setLoading(false)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white flex items-center justify-center">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 w-full max-w-md">
-
-        <h1 className="text-3xl font-bold mb-2">AQLER <span className="text-blue-300">Timesheet</span></h1>
-        <p className="text-slate-400 text-sm mb-8">Sign in to your account</p>
-
-        {error && (
-          <div className="mb-4 text-sm text-red-400 bg-red-500/10 border border-red-500/20 p-3 rounded-lg">
-            {error}
+    <main className="grid min-h-screen place-items-center bg-slate-950 px-4 py-10 text-white">
+      <div className="w-full max-w-md">
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-950/40">
+            <Clock3 size={24} />
           </div>
-        )}
+          <h1 className="text-3xl font-bold tracking-tight">
+            AQLER <span className="text-blue-400">Timesheet</span>
+          </h1>
+          <p className="mt-2 text-sm text-slate-400">
+            Sign in to record your work and view your schedule.
+          </p>
+        </div>
 
-        <div className="space-y-4">
+        <form
+          onSubmit={handleLogin}
+          className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-black/20 sm:p-8"
+        >
+          {error && (
+            <div role="alert" className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">
+              {error}
+            </div>
+          )}
 
-          <div>
-            <label className="text-sm text-slate-400 mb-1 block">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
-              placeholder="you@example.com"
-            />
+          <div className="space-y-5">
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-300">Email</span>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="email"
+                required
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                placeholder="you@example.com"
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-sm font-medium text-slate-300">Password</span>
+              <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                required
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition placeholder:text-slate-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                placeholder="Enter your password"
+              />
+            </label>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 font-semibold text-white shadow-lg shadow-blue-950/30 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <LogIn size={18} />
+              {loading ? 'Signing in...' : 'Sign in'}
+            </button>
           </div>
 
-          <div>
-            <label className="text-sm text-slate-400 mb-1 block">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 text-white text-sm focus:outline-none focus:border-blue-500"
-              placeholder="••••••••"
-            />
-          </div>
-
-          <button
-            onClick={handleLogin}
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-500 transition py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-
-          <p className="text-center text-sm text-slate-400">
-            Don't have an account?{" "}
-            <Link to="/register" className="text-blue-400 hover:text-blue-300 transition">
-              Create Account
+          <p className="mt-6 text-center text-sm text-slate-400">
+            Don&apos;t have an account?{' '}
+            <Link to="/register" className="font-medium text-blue-400 transition hover:text-blue-300">
+              Create account
             </Link>
           </p>
+        </form>
 
-        </div>
       </div>
-    </div>
+    </main>
   )
 }
 
