@@ -46,10 +46,7 @@ function WorkLog({ logs }) {
     <section>
       <div className="mb-4 flex items-end justify-between gap-4">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-widest text-blue-300">
-            Recent activity
-          </p>
-          <h2 className="mt-1 text-2xl font-bold text-white">Work log</h2>
+          <h2 className="text-2xl font-bold text-white">Recent work sessions</h2>
         </div>
         <span className="rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-400">
           {logs.length} {logs.length === 1 ? 'session' : 'sessions'}
@@ -57,14 +54,14 @@ function WorkLog({ logs }) {
       </div>
 
       {visibleLogs.length > 0 ? (
-        <div className="space-y-3">
+        <div className="divide-y divide-slate-800 overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
           {visibleLogs.map((log) => {
             const isActive = log.time_out === null
 
             return (
               <article
                 key={log.id}
-                className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 transition hover:border-slate-700 sm:p-5"
+                className="p-4 transition hover:bg-slate-800/30 sm:p-5"
               >
                 <div className="grid gap-5 sm:grid-cols-[1.2fr_1fr_1fr_auto] sm:items-center">
                   <div>
@@ -115,7 +112,7 @@ function WorkLog({ logs }) {
           })}
         </div>
       ) : (
-        <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/30 py-14 text-center">
+        <div className="rounded-xl border border-dashed border-slate-700 bg-slate-900/30 py-14 text-center">
           <Inbox className="mx-auto text-slate-600" size={32} />
           <p className="mt-3 font-medium text-slate-300">No work sessions yet</p>
           <p className="mt-1 text-sm text-slate-500">

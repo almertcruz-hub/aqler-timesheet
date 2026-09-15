@@ -27,7 +27,7 @@ function Login() {
     <main className="grid min-h-screen place-items-center bg-slate-950 px-4 py-10 text-white">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-950/40">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-950/40">
             <Clock3 size={24} />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -40,7 +40,7 @@ function Login() {
 
         <form
           onSubmit={handleLogin}
-          className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-black/20 sm:p-8"
+          className="rounded-xl border border-slate-800 bg-slate-900/80 p-6 shadow-xl shadow-black/15 sm:p-8"
         >
           {error && (
             <div role="alert" className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-300">

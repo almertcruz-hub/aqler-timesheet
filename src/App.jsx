@@ -8,8 +8,9 @@ import Admin from './pages/Admin'
 import AdminLayout from './pages/AdminLayout'
 import Shift from './pages/Shift'
 import PayrollConcerns from './pages/PayrollConcerns'
-import ThemeToggle from './components/ThemeToggle'
-import PwaInstallButton from './components/PwaInstallButton'
+import AppUtilitiesProvider from './context/AppUtilitiesContext'
+import PublicUtilities from './components/PublicUtilities'
+import PwaInstallHelp from './components/PwaInstallHelp'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -29,9 +30,10 @@ function App() {
   }, [])
 
   return (
-    <BrowserRouter>
-      <ThemeToggle />
-      <PwaInstallButton />
+    <AppUtilitiesProvider>
+      <BrowserRouter>
+      {!session && <PublicUtilities />}
+      <PwaInstallHelp />
 
       {loading ? (
         <div className="flex min-h-screen items-center justify-center bg-slate-950 text-white">
@@ -84,7 +86,8 @@ function App() {
         />
         </Routes>
       )}
-    </BrowserRouter>
+      </BrowserRouter>
+    </AppUtilitiesProvider>
   )
 }
 

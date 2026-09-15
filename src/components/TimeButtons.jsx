@@ -65,7 +65,7 @@ function TimeButtons({
 
 
   return (
-    <section className="mb-10 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/80 shadow-2xl shadow-black/15">
+    <section className="mb-10 overflow-hidden rounded-xl border border-slate-800 bg-slate-900/80 shadow-xl shadow-black/10">
       <div className={`h-1 w-full ${isWorking ? 'bg-emerald-500' : 'bg-blue-500'}`} />
       <div className="p-5 md:p-8">
       <div className="flex flex-col gap-6">

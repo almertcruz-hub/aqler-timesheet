@@ -173,9 +173,6 @@ function Home({ session }) {
 
       <main className="mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-10">
         <header className="mb-8">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-blue-300">
-            My Timesheet
-          </p>
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
             Today&apos;s Timesheet
           </h1>

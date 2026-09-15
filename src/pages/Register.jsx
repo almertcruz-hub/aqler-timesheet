@@ -54,7 +54,7 @@ function Register() {
     <main className="grid min-h-screen place-items-center bg-slate-950 px-4 py-10 text-white">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-blue-600 shadow-lg shadow-blue-950/40">
+          <div className="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-950/40">
             <Clock3 size={24} />
           </div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -67,7 +67,7 @@ function Register() {
 
         <form
           onSubmit={handleRegister}
-          className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 shadow-2xl shadow-black/20 sm:p-8"
+          className="rounded-xl border border-slate-800 bg-slate-900/80 p-6 shadow-xl shadow-black/15 sm:p-8"
         >
           {message && (
             <div
@@ -140,7 +140,7 @@ function Register() {
             <button
               type="submit"
               disabled={loading || success}
-              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 font-semibold shadow-lg shadow-blue-950/30 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 font-semibold text-white shadow-sm transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <UserPlus size={18} />
               {loading ? 'Creating account...' : success ? 'Account created' : 'Create account'}

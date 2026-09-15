@@ -60,6 +60,11 @@ html.light .bg-red-600.text-white {
   color: #ffffff !important;
 }
 
+html.light .bg-blue-600.text-white:disabled,
+html.light .bg-red-600.text-white:disabled {
+  color: #64748b !important;
+}
+
 html.light .hover\:text-white:hover {
   color: #0f172a !important;
 }

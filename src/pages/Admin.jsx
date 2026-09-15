@@ -389,9 +389,6 @@ function Admin({ session, section = 'logs', embedded = false }) {
         {!embedded && (
         <>
         <header className="mb-7">
-          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-blue-300">
-            Administrator
-          </p>
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
             Admin Dashboard
           </h1>
@@ -430,10 +427,9 @@ function Admin({ session, section = 'logs', embedded = false }) {
         )}
 
         {displayedTab === 'reminders' && (
-        <section className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5 shadow-xl shadow-black/10 md:p-6">
+        <section className="rounded-xl border border-slate-800 bg-slate-900/70 p-5 md:p-6">
           <div className="mb-5">
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-300">Email reminders</p>
-            <h1 className="mt-1 text-2xl font-bold">Schedule an employee reminder</h1>
+            <h1 className="text-2xl font-bold">Schedule an employee reminder</h1>
             <p className="mt-1 text-sm text-slate-400">Choose the weekdays and time. The schedule repeats weekly in Asia/Manila time.</p>
           </div>
 
@@ -514,7 +510,7 @@ function Admin({ session, section = 'logs', embedded = false }) {
             <div className="flex items-center gap-4 md:col-span-2">
               <button
                 disabled={savingReminder}
-                className="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold shadow-lg shadow-blue-950/30 hover:bg-blue-500 disabled:opacity-50"
+                className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:opacity-50"
               >
                 {savingReminder ? 'Scheduling...' : 'Schedule email'}
               </button>
@@ -589,7 +585,6 @@ function Admin({ session, section = 'logs', embedded = false }) {
         <>
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between mb-8">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-widest text-blue-300 mb-2">Admin</p>
             <h1 className="text-2xl font-bold md:text-4xl">Employee Work Logs</h1>
             <p className="text-slate-400 mt-2">View time-in and time-out activity across all employees.</p>
           </div>
@@ -637,7 +632,7 @@ function Admin({ session, section = 'logs', embedded = false }) {
           </div>
         )}
 
-        <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70">
+        <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[850px] text-left text-sm">
               <thead className="border-b border-slate-800 bg-slate-950/50 text-slate-400">

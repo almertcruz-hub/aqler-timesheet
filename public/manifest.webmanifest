@@ -1,7 +1,7 @@
 {
   "id": "/",
   "name": "AQLER Timesheet",
-  "short_name": "Timesheet",
+  "short_name": "AQLER Timesheet",
   "description": "Record work sessions, view schedules, and manage employee timesheets.",
   "start_url": "/",
   "scope": "/",

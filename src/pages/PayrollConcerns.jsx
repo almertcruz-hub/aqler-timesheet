@@ -218,9 +218,6 @@ function PayrollConcerns({ session, adminMode = false, embedded = false }) {
       <div className={embedded ? '' : 'mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-10'}>
         <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-blue-300">
-              {isAdmin ? 'Administrator' : 'Employee support'}
-            </p>
             <h1 className="text-3xl font-bold md:text-4xl">
               {isAdmin ? 'Payroll Concern Queue' : 'Payroll Concerns'}
             </h1>
@@ -236,7 +233,7 @@ function PayrollConcerns({ session, adminMode = false, embedded = false }) {
               <button
                 type="button"
                 onClick={() => setShowAdminForm((isVisible) => !isVisible)}
-                className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold shadow-lg shadow-blue-950/30 transition hover:bg-blue-500"
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500"
               >
                 {showAdminForm ? <X size={16} /> : <Plus size={16} />}
                 {showAdminForm ? 'Close form' : 'Submit a concern'}
@@ -275,7 +272,7 @@ function PayrollConcerns({ session, adminMode = false, embedded = false }) {
               </div>
             )}
 
-            <div className="mb-5 grid gap-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-3 md:grid-cols-[1.4fr_0.8fr_0.9fr]">
+            <div className="mb-5 grid gap-3 rounded-xl border border-slate-800 bg-slate-900/60 p-3 md:grid-cols-[1.4fr_0.8fr_0.9fr]">
               <label className="relative">
                 <span className="sr-only">Search concerns</span>
                 <Search
@@ -320,7 +317,7 @@ function PayrollConcerns({ session, adminMode = false, embedded = false }) {
             </div>
 
             <div className="grid items-start gap-5 lg:grid-cols-[1.1fr_0.9fr]">
-              <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/10">
+              <section className="rounded-xl border border-slate-800 bg-slate-900/80 p-5">
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="text-lg font-semibold">Concerns</h2>
                   <span className="text-sm text-slate-400">
@@ -353,7 +350,7 @@ function PayrollConcerns({ session, adminMode = false, embedded = false }) {
                 )}
               </section>
 
-              <section className="h-fit rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/10 lg:sticky lg:top-5">
+              <section className="h-fit rounded-xl border border-slate-800 bg-slate-900/80 p-5 lg:sticky lg:top-5">
                 {!selectedConcern ? (
                   <p className="py-10 text-center text-slate-400">
                     Select a concern to review it.
@@ -430,7 +427,7 @@ function PayrollConcerns({ session, adminMode = false, embedded = false }) {
                           type="button"
                           onClick={saveAdminResponse}
                           disabled={savingResponse}
-                          className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold shadow-lg shadow-blue-950/30 transition hover:bg-blue-500 disabled:opacity-50"
+                          className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-500 disabled:opacity-50"
                         >
                           {savingResponse ? 'Saving...' : 'Save response'}
                         </button>
@@ -448,7 +445,7 @@ function PayrollConcerns({ session, adminMode = false, embedded = false }) {
               onConcernSubmitted={handleConcernSubmitted}
             />
 
-            <section className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/10">
+            <section className="rounded-xl border border-slate-800 bg-slate-900/80 p-5">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-lg font-semibold">Your concerns</h2>
                 <span className="text-sm text-slate-400">

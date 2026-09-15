@@ -81,7 +81,7 @@ function ConcernForm({ userId, onConcernSubmitted }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="h-fit rounded-2xl border border-slate-800 bg-slate-900/80 p-5 shadow-xl shadow-black/10 sm:p-6"
+      className="h-fit rounded-xl border border-slate-800 bg-slate-900/80 p-5 sm:p-6"
     >
       <div className="mb-6 flex items-start gap-3">
         <div className="rounded-xl bg-blue-500/10 p-2.5 text-blue-300">

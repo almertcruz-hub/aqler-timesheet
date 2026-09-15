@@ -1,9 +1,24 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { Clock3, LayoutDashboard, LogOut, Menu, MessageSquareWarning, X, CalendarDays } from 'lucide-react'
+import {
+  CalendarDays,
+  ChevronDown,
+  Clock3,
+  Download,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MessageSquareWarning,
+  Moon,
+  Sun,
+  X,
+} from 'lucide-react'
+import { useAppUtilities } from '../context/appUtilities'
 
 function Navbar({ user, onSignOut, isAdmin = false }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
+  const { canInstall, installApp, isLight, toggleTheme } = useAppUtilities()
 
   const navLinkClasses = ({ isActive }) =>
     `flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
@@ -14,6 +29,7 @@ function Navbar({ user, onSignOut, isAdmin = false }) {
 
   function closeMenu() {
     setMenuOpen(false)
+    setAccountOpen(false)
   }
 
   return (
@@ -59,8 +75,14 @@ function Navbar({ user, onSignOut, isAdmin = false }) {
               </NavLink>
             </nav>
 
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex min-w-0 items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1.5">
+            <div className="relative min-w-0">
+              <button
+                type="button"
+                onClick={() => setAccountOpen((isOpen) => !isOpen)}
+                aria-expanded={accountOpen}
+                aria-label="Open account menu"
+                className="flex min-w-0 items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-left transition hover:bg-slate-800"
+              >
                 <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-blue-600 text-sm font-bold text-white">
                   {user.email.charAt(0).toUpperCase()}
                 </div>
@@ -70,16 +92,51 @@ function Navbar({ user, onSignOut, isAdmin = false }) {
                   </p>
                   {isAdmin && <p className="text-xs text-blue-300">Administrator</p>}
                 </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={onSignOut}
-                className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
-              >
-                <LogOut size={16} />
-                <span className="sr-only lg:not-sr-only">Sign out</span>
+                <ChevronDown
+                  size={16}
+                  className={`shrink-0 text-slate-500 transition ${accountOpen ? 'rotate-180' : ''}`}
+                />
               </button>
+
+              {accountOpen && (
+                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-64 overflow-hidden rounded-xl border border-slate-700 bg-slate-900 p-1.5 shadow-2xl shadow-black/25">
+                  <div className="border-b border-slate-800 px-3 py-2.5">
+                    <p className="truncate text-sm font-medium text-slate-200">{user.email}</p>
+                    <p className="mt-0.5 text-xs text-slate-500">
+                      {isAdmin ? 'Administrator' : 'Employee'}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                  >
+                    {isLight ? <Moon size={17} /> : <Sun size={17} />}
+                    {isLight ? 'Use dark theme' : 'Use light theme'}
+                  </button>
+
+                  {canInstall && (
+                    <button
+                      type="button"
+                      onClick={installApp}
+                      className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                    >
+                      <Download size={17} />
+                      Install app
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={onSignOut}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-red-300 transition hover:bg-red-500/10"
+                  >
+                    <LogOut size={17} />
+                    Sign out
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -110,19 +167,42 @@ function Navbar({ user, onSignOut, isAdmin = false }) {
               </NavLink>
             </nav>
 
-            <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-800 pt-4">
-              <div className="min-w-0">
+            <div className="mt-4 border-t border-slate-800 pt-4">
+              <div className="mb-3 min-w-0 px-3">
                 <p className="truncate text-sm font-medium text-slate-200">{user.email}</p>
                 <p className="text-xs text-slate-500">{isAdmin ? 'Administrator' : 'Employee'}</p>
               </div>
+
+              <div className="grid gap-1">
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                >
+                  {isLight ? <Moon size={17} /> : <Sun size={17} />}
+                  {isLight ? 'Use dark theme' : 'Use light theme'}
+                </button>
+
+                {canInstall && (
+                  <button
+                    type="button"
+                    onClick={installApp}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-300 hover:bg-slate-800 hover:text-white"
+                  >
+                    <Download size={17} />
+                    Install app
+                  </button>
+                )}
+
               <button
                 type="button"
                 onClick={onSignOut}
-                className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-red-500/20 px-3 py-2 text-sm text-red-300 hover:bg-red-500/10"
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-red-300 hover:bg-red-500/10"
               >
-                <LogOut size={16} />
+                <LogOut size={17} />
                 Sign out
               </button>
+              </div>
             </div>
           </div>
         )}

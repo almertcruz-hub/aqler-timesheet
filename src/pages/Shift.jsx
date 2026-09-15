@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { CalendarDays, CalendarRange, Eye, RefreshCw, Repeat2, UserRound } from 'lucide-react'
+import { CalendarRange, Eye, RefreshCw, Repeat2, UserRound } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import Navbar from '../components/Navbar'
 
@@ -690,11 +690,6 @@ function Shift({ session, adminMode = false, embedded = false }) {
       <div className={embedded ? '' : 'mx-auto max-w-7xl px-4 py-8 md:px-8 md:py-10'}>
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="mb-2 flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-blue-300">
-              <CalendarDays size={16} />
-              Shift management
-            </p>
-
             <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
               Employee Schedule
             </h1>
@@ -711,7 +706,7 @@ function Shift({ session, adminMode = false, embedded = false }) {
           </div>
 
           {isAdmin && (
-            <label className="w-full rounded-2xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-300 shadow-xl shadow-black/10 md:w-96">
+            <label className="w-full rounded-xl border border-slate-800 bg-slate-900/70 p-4 text-sm text-slate-300 md:w-96">
               <span className="flex items-center gap-2 font-medium text-slate-200">
                 <UserRound size={16} className="text-blue-300" />
                 Employee
@@ -806,7 +801,7 @@ function Shift({ session, adminMode = false, embedded = false }) {
         )}
 
         {loading ? (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-12 text-center text-slate-400">
+          <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-12 text-center text-slate-400">
             <RefreshCw className="mx-auto mb-3 animate-spin" size={24} />
             Loading schedule...
           </div>
@@ -814,7 +809,7 @@ function Shift({ session, adminMode = false, embedded = false }) {
           <>
             {isAdmin && activeTab === 'baseline' && (
               <form onSubmit={saveBaseline}>
-                <div className="mb-6 rounded-2xl border border-blue-500/30 bg-blue-500/5 p-5">
+                <div className="mb-6 rounded-xl border border-blue-500/30 bg-blue-500/5 p-5">
                   <h2 className="text-xl font-semibold">
                     Apply hours to multiple days
                   </h2>
@@ -902,14 +897,14 @@ function Shift({ session, adminMode = false, embedded = false }) {
                     <button
                       type="button"
                       onClick={applyBaselineTime}
-                      className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold hover:bg-blue-500 sm:col-span-2 lg:col-span-1"
+                      className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 sm:col-span-2 lg:col-span-1"
                     >
                       Apply to selected
                     </button>
                   </div>
                 </div>
 
-                <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70">
+                <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
                   {WEEKDAYS.map((weekday) => {
                     const day = baseline.find(
                       (item) =>
@@ -1013,7 +1008,7 @@ function Shift({ session, adminMode = false, embedded = false }) {
                   })}
                 </div>
 
-                <div className="sticky bottom-4 z-20 mt-6 flex flex-col gap-3 rounded-2xl border border-slate-700 bg-slate-950/95 p-4 shadow-2xl shadow-black/30 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+                <div className="sticky bottom-4 z-20 mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-950/95 p-4 shadow-xl shadow-black/20 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <p className="font-medium text-slate-100">
                       {baselineDirty ? 'Unsaved weekly changes' : 'Weekly schedule is up to date'}
@@ -1036,7 +1031,7 @@ function Shift({ session, adminMode = false, embedded = false }) {
 
             {(!isAdmin || activeTab === 'week' || activeTab === 'view') && (
               <form onSubmit={saveSpecificWeek}>
-                <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900/70 p-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="mb-6 flex flex-col gap-4 rounded-xl border border-slate-800 bg-slate-900/70 p-5 sm:flex-row sm:items-center sm:justify-between">
                   <button
                     type="button"
                     onClick={() => changeWeek(-1)}
@@ -1066,7 +1061,7 @@ function Shift({ session, adminMode = false, embedded = false }) {
                 </div>
 
                 {isAdmin && activeTab === 'week' && (
-                  <div className="mb-6 rounded-2xl border border-blue-500/30 bg-blue-500/5 p-5">
+                  <div className="mb-6 rounded-xl border border-blue-500/30 bg-blue-500/5 p-5">
                     <h2 className="text-xl font-semibold">
                       Apply hours to selected dates
                     </h2>
@@ -1157,7 +1152,7 @@ function Shift({ session, adminMode = false, embedded = false }) {
                       <button
                         type="button"
                         onClick={applyOverrideTime}
-                        className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold hover:bg-blue-500 sm:col-span-2 lg:col-span-1"
+                        className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-500 sm:col-span-2 lg:col-span-1"
                       >
                         Apply custom time
                       </button>
@@ -1165,7 +1160,7 @@ function Shift({ session, adminMode = false, embedded = false }) {
                   </div>
                 )}
 
-                <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70">
+                <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
                   {weekSchedule.map((day) => {
                     const effectiveDayOff =
                       day.mode === 'off' ||
@@ -1358,7 +1353,7 @@ function Shift({ session, adminMode = false, embedded = false }) {
                 </div>
 
                 {isAdmin && activeTab === 'week' && (
-                  <div className="sticky bottom-4 z-20 mt-6 flex flex-col gap-3 rounded-2xl border border-slate-700 bg-slate-950/95 p-4 shadow-2xl shadow-black/30 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+                  <div className="sticky bottom-4 z-20 mt-6 flex flex-col gap-3 rounded-xl border border-slate-700 bg-slate-950/95 p-4 shadow-xl shadow-black/20 backdrop-blur sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="font-medium text-slate-100">
                         {weekDirty ? 'Unsaved changes for this week' : 'This week is up to date'}
