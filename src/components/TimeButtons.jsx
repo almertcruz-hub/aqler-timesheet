@@ -68,15 +68,15 @@ function TimeButtons({
     <section className="mb-10 overflow-hidden rounded-xl border border-slate-800 bg-slate-900/80 shadow-xl shadow-black/10">
       <div className={`h-1 w-full ${isWorking ? 'bg-emerald-500' : 'bg-blue-500'}`} />
       <div className="p-5 md:p-8">
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4">
         <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div>
 
-            <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400">
-              Today's Timesheet
-            </h2>
+            {/* <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400">
+              
+            </h2> */}
 
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-base text-slate-400">
               {formatCurrentDate(currentTime)}
             </p>
 
@@ -101,7 +101,7 @@ function TimeButtons({
           )}
         </div>
 
-        <div className="grid items-center gap-7 py-4 md:grid-cols-[1fr_auto] md:text-left">
+        <div className="grid items-center gap-7 md:grid-cols-[1fr_auto] md:text-left">
           <div className="text-center md:text-left">
           {isWorking ? (
             <>
@@ -122,9 +122,9 @@ function TimeButtons({
                 {formatCurrentTime(currentTime)}
               </p>
 
-              <p className="mt-3 text-sm text-slate-400 md:text-base">
+              {/* <p className="mt-3 text-sm text-slate-400 md:text-base">
                 Current time
-              </p>
+              </p> */}
             </>
           )}
           </div>
