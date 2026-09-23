@@ -8,6 +8,10 @@ export const CONCERN_CATEGORIES = [
     label: 'Vacation Leave',
   },
   {
+    value: 'file_overtime',
+    label: 'File Overtime',
+  },
+  {
     value: 'incorrect_salary',
     label: 'Incorrect salary',
   },
@@ -38,6 +42,10 @@ export const CONCERN_CATEGORIES = [
   {
     value: 'missing_time_in',
     label: 'Missing Time In',
+  },
+  {
+    value: 'late_time_in',
+    label: 'Late Time In',
   },
   {
     value: 'missing_time_out',
