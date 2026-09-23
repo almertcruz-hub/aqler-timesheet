@@ -4,6 +4,7 @@ import { supabase } from './lib/supabase'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import PasswordReset from './pages/PasswordReset'
 import Admin from './pages/Admin'
 import AdminLayout from './pages/AdminLayout'
 import Shift from './pages/Shift'
@@ -15,6 +16,12 @@ import PwaInstallHelp from './components/PwaInstallHelp'
 function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [recovering, setRecovering] = useState(false)
+  const [recoveryError] = useState(() => {
+    const hash = new URLSearchParams(window.location.hash.slice(1))
+    const query = new URLSearchParams(window.location.search)
+    return hash.has('error') || hash.has('error_code') || query.has('error') || query.has('error_code')
+  })
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -24,6 +31,8 @@ function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
+      if (_event === 'PASSWORD_RECOVERY') setRecovering(true)
+      if (_event === 'SIGNED_OUT') setRecovering(false)
     })
 
     return () => subscription.unsubscribe()
@@ -41,6 +50,9 @@ function App() {
         </div>
       ) : (
         <Routes>
+        <Route path="/forgot-password" element={<PasswordReset mode="request" />} />
+        <Route path="/reset-password" element={<PasswordReset key="reset" mode="reset" session={session} recoveryError={recoveryError} onComplete={() => setRecovering(false)} />} />
+        {recovering ? <Route path="*" element={<Navigate to="/reset-password" replace />} /> : <>
         <Route path="/" element={session ? <Home session={session} /> : <Navigate to="/login" />} />
         <Route
           path="/admin"
@@ -84,6 +96,7 @@ function App() {
             : <Navigate to='/login' />
           }
         />
+        </>}
         </Routes>
       )}
       </BrowserRouter>

@@ -75,6 +75,12 @@ function Login() {
               />
             </label>
 
+            <div className="text-right">
+              <Link to="/forgot-password" className="text-sm font-medium text-blue-400 transition hover:text-blue-300">
+                Forgot password?
+              </Link>
+            </div>
+
             <button
               type="submit"
               disabled={loading}

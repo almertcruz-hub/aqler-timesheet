@@ -27,6 +27,29 @@ After changing application source files, refresh the exact-code documentation sn
 node docs/generate-source-guide.mjs
 ```
 
+## Password reset setup
+
+The login page links to `/forgot-password`. Supabase emails a recovery link back
+to `/reset-password`, where the user enters and confirms a new password.
+
+In Supabase **Authentication → URL Configuration**, set your production Site URL
+and add these allowed Redirect URLs (use your actual domain and development port):
+
+- `http://localhost:5173/reset-password`
+- `https://your-domain.com/reset-password`
+
+Keep the reset-password email template's link pointing to `{{ .ConfirmationURL }}`
+so Supabase verifies the recovery token before redirecting to the application.
+Configure email delivery for production in Supabase. The app uses the existing
+public Supabase client; no service-role key is needed.
+
+To verify, request a reset for a test account, open the email link, save matching
+passwords, and confirm the new password works at sign-in. Also check mismatched
+passwords and an expired or reused link. Supabase enforces the project's password
+policy; the form shares registration's six-character minimum.
+
+See [Supabase password authentication](https://supabase.com/docs/guides/auth/passwords).
+
 ## Documentation
 
 - [Interactive HTML learning guide](./docs/index.html) is the recommended starting
