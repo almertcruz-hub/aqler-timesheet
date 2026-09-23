@@ -8,6 +8,7 @@ import {
   CONCERN_CATEGORIES,
   CONCERN_STATUSES,
   getCategoryLabel,
+  normalizeCategory,
 } from '../lib/payrollConcernOptions'
 
 function formatDate(dateValue) {
@@ -204,7 +205,7 @@ function PayrollConcerns({ session, adminMode = false, embedded = false }) {
     const matchesStatus =
       !statusFilter || concern.status === statusFilter
     const matchesCategory =
-      !categoryFilter || concern.category === categoryFilter
+      !categoryFilter || normalizeCategory(concern.category) === categoryFilter
 
     return matchesSearch && matchesStatus && matchesCategory
   })
@@ -219,12 +220,12 @@ function PayrollConcerns({ session, adminMode = false, embedded = false }) {
         <header className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold md:text-4xl">
-              {isAdmin ? 'Payroll Concern Queue' : 'Payroll Concerns'}
+              Concerns &amp; Leave Requests
             </h1>
             <p className="mt-2 text-slate-400">
               {isAdmin
-                ? 'Review employee concerns, respond, and update their status.'
-                : 'Submit and track payroll or attendance concerns.'}
+                ? 'Review employee concerns and leave requests, respond, and update their status.'
+                : 'Submit and track concerns or select Sick Leave or Vacation Leave to file leave.'}
             </p>
           </div>
 

@@ -71,7 +71,7 @@ function Navbar({ user, onSignOut, isAdmin = false }) {
 
               <NavLink to="/payroll-concerns" className={navLinkClasses}>
                 <MessageSquareWarning size={16} />
-                {isAdmin ? 'My Concerns' : 'Concerns'}
+                Concerns &amp; Leave Requests
               </NavLink>
             </nav>
 
@@ -163,7 +163,7 @@ function Navbar({ user, onSignOut, isAdmin = false }) {
 
               <NavLink to="/payroll-concerns" onClick={closeMenu} className={navLinkClasses}>
                 <MessageSquareWarning size={17} />
-                {isAdmin ? 'My Concerns' : 'Payroll Concerns'}
+                Concerns &amp; Leave Requests
               </NavLink>
             </nav>
 

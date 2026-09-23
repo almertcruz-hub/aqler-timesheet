@@ -16,7 +16,7 @@ const ADMIN_LINKS = [
   },
   {
     to: '/admin/concerns',
-    label: 'Concerns',
+    label: 'Concerns & Leave Requests',
     icon: MessageSquareWarning,
   },
   {

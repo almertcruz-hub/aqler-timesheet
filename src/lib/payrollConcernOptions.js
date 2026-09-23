@@ -1,11 +1,19 @@
 export const CONCERN_CATEGORIES = [
   {
+    value: 'sick_leave',
+    label: 'Sick Leave',
+  },
+  {
+    value: 'vacation_leave',
+    label: 'Vacation Leave',
+  },
+  {
     value: 'incorrect_salary',
     label: 'Incorrect salary',
   },
   {
     value: 'missing_overtime',
-    label: 'Missing overtime',
+    label: 'Overtime concern',
   },
   {
     value: 'incorrect_deduction',
@@ -20,20 +28,12 @@ export const CONCERN_CATEGORIES = [
     label: 'Missing allowance',
   },
   {
-    value: 'late_leave_filing_or_approval',
-    label: 'Late leave filing or approval',
-  },
-  {
     value: 'leave_issue',
-    label: 'Leave issue',
+    label: 'Leave concern',
   },
   {
     value: 'absence_issue',
     label: 'Absence issue',
-  },
-  {
-    value: 'failed_overtime_approval',
-    label: 'Failed overtime approval',
   },
   {
     value: 'missing_time_in',
@@ -45,7 +45,7 @@ export const CONCERN_CATEGORIES = [
   },
   {
     value: 'wrong_punch',
-    label: 'Wrong punch',
+    label: 'Incorrect time entry',
   },
   {
     value: 'wrong_schedule',
@@ -72,9 +72,16 @@ export const CONCERN_STATUSES = [
   },
 ]
 
+// Group older submissions under the current categories without rewriting records.
+export function normalizeCategory(categoryValue) {
+  if (categoryValue === 'late_leave_filing_or_approval') return 'leave_issue'
+  if (categoryValue === 'failed_overtime_approval') return 'missing_overtime'
+  return categoryValue
+}
+
 export function getCategoryLabel(categoryValue) {
   const category = CONCERN_CATEGORIES.find(
-    (item) => item.value === categoryValue
+    (item) => item.value === normalizeCategory(categoryValue)
   )
 
   return category?.label || categoryValue
