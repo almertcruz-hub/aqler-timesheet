@@ -13,22 +13,17 @@
     <a class="skip-link" href="#course-navigation">Skip to guide navigation</a>
     <main class="shell">
       <header class="hero">
-        <p class="eyebrow">AQLER Timesheet exact code walkthrough</p>
-        <h1>Understand every module in the current app</h1>
-        <p class="hero-summary">Learn the app one module at a time, from purpose to exact code to execution flow.</p>
+        <p class="eyebrow">AQLER Timesheet learning guide</p>
+        <h1>Learn the app without reading everything at once</h1>
+        <p class="hero-summary">Choose one module, understand what it does, follow its main flow, and open the full code only when you are ready.</p>
         <details class="guide-intro">
           <summary>About this guide and your learning progress</summary>
-          <p>
-            Read each module at three levels: start with its overall purpose, inspect
-            the important code chunks, and finish by tracing the logic in execution order.
-          </p>
-          <div class="course-path" aria-label="Six reading levels">
-            <button class="course-step current" type="button" data-global-view="overall" aria-pressed="true"><strong>1. Overall</strong><span>What the module owns, receives, and produces.</span></button>
-            <button class="course-step" type="button" data-global-view="functions" aria-pressed="false"><strong>2. Whole functions</strong><span>Understand each complete job as one story before reading its lines.</span></button>
-            <button class="course-step" type="button" data-global-view="flow" aria-pressed="false"><strong>3. Guided code flow</strong><span>Important related code in working order, with syntax and its visible website effect together.</span></button>
-            <button class="course-step" type="button" data-global-view="ui" aria-pressed="false"><strong>4. UI, JSX &amp; CSS</strong><span>Screen pictures connected to the exact elements, dynamic expressions, and responsive styling.</span></button>
-            <button class="course-step" type="button" data-global-view="code" aria-pressed="false"><strong>5. Code chunks</strong><span>Complete current source code with focused line-level explanations.</span></button>
-            <button class="course-step" type="button" data-global-view="logic" aria-pressed="false"><strong>6. Logical explanation</strong><span>The exact order in which the module works.</span></button>
+          <p>Use the four main views below in order. Detailed function stories and practice material remain available through the detailed-tools switch.</p>
+          <div class="course-path" aria-label="Four reading steps">
+            <button class="course-step current" type="button" data-global-view="overall" aria-pressed="true"><strong>1. Overview</strong><span>Learn why the module exists and what information moves through it.</span></button>
+            <button class="course-step" type="button" data-global-view="flow" aria-pressed="false"><strong>2. Step-by-step</strong><span>Follow the important code in the order the website uses it.</span></button>
+            <button class="course-step" type="button" data-global-view="ui" aria-pressed="false"><strong>3. Screen &amp; styles</strong><span>Connect visible interface parts to JSX and Tailwind classes.</span></button>
+            <button class="course-step" type="button" data-global-view="code" aria-pressed="false"><strong>4. Full code</strong><span>Open the real source in small notebook cells when you need exact details.</span></button>
           </div>
           <div class="self-contained-banner">
             <strong>Everything needed for learning is embedded here.</strong>
@@ -43,9 +38,9 @@
           <div class="progress-card" aria-label="Course progress">
             <header>
               <strong>Your learning progress</strong>
-              <span data-progress-label>0 of 11 modules understood</span>
+              <span data-progress-label>0 of 16 modules understood</span>
             </header>
-            <div class="progress-track" role="progressbar" aria-label="Modules understood" aria-valuemin="0" aria-valuemax="11" aria-valuenow="0">
+            <div class="progress-track" role="progressbar" aria-label="Modules understood" aria-valuemin="0" aria-valuemax="16" aria-valuenow="0">
               <div class="progress-fill" data-progress-fill></div>
             </div>
             <button class="button" type="button" data-reset-progress>Reset progress</button>
@@ -55,23 +50,24 @@
 
       <div class="course-navigator" id="course-navigation" data-course-navigator>
         <nav class="guide-mode-tabs" aria-label="Guide sections">
-          <button type="button" data-guide-mode="overview" aria-pressed="false">Overview &amp; foundations</button>
-          <button type="button" data-guide-mode="syntax" aria-pressed="false">Syntax handbook</button>
-          <button type="button" data-guide-mode="modules" aria-pressed="true">Application modules</button>
+          <button type="button" data-guide-mode="overview" aria-pressed="true">Start here</button>
+          <button type="button" data-guide-mode="syntax" aria-pressed="false">Syntax help</button>
+          <button type="button" data-guide-mode="modules" aria-pressed="false">App modules</button>
         </nav>
-        <div class="bookmark-center">
-          <button type="button" class="bookmark-toggle" data-bookmark-toggle aria-expanded="false">
-            ★ Bookmarked cells <span data-bookmark-count>0</span>
-          </button>
+        <div class="guide-utility-row">
+          <div class="bookmark-center">
+            <button type="button" class="bookmark-toggle" data-bookmark-toggle aria-expanded="false">
+              ★ Bookmarks <span data-bookmark-count>0</span>
+            </button>
           <aside class="bookmark-drawer" data-bookmark-drawer hidden>
             <header><div><strong>Your saved places</strong><p>Bookmarks stay in this browser.</p></div><button type="button" data-close-bookmarks aria-label="Close bookmarks">×</button></header>
             <div data-bookmark-list></div>
             <button class="button clear-bookmarks" type="button" data-clear-bookmarks>Remove all bookmarks</button>
           </aside>
+          </div>
+          <button type="button" class="guide-assistant-toggle" data-guide-assistant-toggle aria-expanded="false">? Ask</button>
+          <button type="button" class="detail-mode-toggle" data-detail-mode aria-pressed="false">Show detailed tools</button>
         </div>
-        <button type="button" class="guide-assistant-toggle" data-guide-assistant-toggle aria-expanded="false">
-          ? Ask the guide
-        </button>
         <div class="module-navigator" data-module-navigator>
           <button class="button" type="button" data-previous-module>← Previous</button>
           <label>
@@ -80,14 +76,19 @@
               <option value="startup">1. Startup, client, and routing</option>
               <option value="auth">2. Login and registration</option>
               <option value="navbar">3. Shared navigation</option>
-              <option value="timekeeping">4. Employee timekeeping</option>
-              <option value="worklog">5. Employee work-log display</option>
-              <option value="adminlogs">6. Admin logs, search, and CSV</option>
-              <option value="reminders">7. Reminder scheduling</option>
-              <option value="processor">8. Email Edge Function</option>
-              <option value="shifts">9. Shift schedules and date overrides</option>
-              <option value="database">10. Database and RLS</option>
-              <option value="styling">11. Global styling</option>
+              <option value="utilities">4. Shared layouts and utilities</option>
+              <option value="timekeeping">5. Employee timekeeping</option>
+              <option value="worklog">6. Employee work-log display</option>
+              <option value="adminlogs">7. Admin logs, search, and CSV</option>
+              <option value="reminders">8. Reminder scheduling</option>
+              <option value="processor">9. Email Edge Function</option>
+              <option value="shifts">10. Shift schedules and date overrides</option>
+              <option value="payroll">11. Payroll concerns</option>
+              <option value="database">12. Database and RLS</option>
+              <option value="styling">13. Global styling</option>
+              <option value="pwa">14. PWA installation and offline shell</option>
+              <option value="projectfiles">15. Assets and reference files</option>
+              <option value="guideinternals">16. Learning-guide system</option>
             </select>
           </label>
           <span class="module-position" data-module-position>1 of 11</span>
@@ -107,20 +108,12 @@
       </div>
 
       <section class="study-order">
-        <h2>How to use this walkthrough</h2>
+        <h2>A simple way to use this guide</h2>
         <ol>
-          <li>Open the modules in order on your first pass.</li>
-          <li>Read <strong>Overall</strong> before looking at syntax.</li>
-          <li>Open <strong>Whole functions</strong> next. Learn why each complete function exists, what goes in, what happens in order, and what comes out. Keep the full source closed until the story makes sense.</li>
-          <li>Use <strong>Guided code flow</strong> to study only the important related pieces in execution order. Each step connects its syntax to what changes on the actual website.</li>
-          <li>Open <strong>UI, JSX &amp; CSS</strong> to compare screen pictures with the exact JSX tree, dynamic braces, event handlers, Tailwind classes, and mobile breakpoints.</li>
-          <li>Open <strong>Code chunks</strong> and identify the input, work, and output.</li>
-          <li>If you have never coded, read each yellow <strong>If you have never coded before</strong> box before its syntax section. It explains ideas such as lists, <code>.map</code>, indexes, arrows, state, JSX, and database chains with small examples.</li>
-          <li>Stay on <strong>Plain English</strong> first. Move to <strong>Beginner code</strong> for line-by-line explanations, then use <strong>Technical detail</strong> when you are ready for exact syntax.</li>
-          <li>Use interactive <strong>Run next step</strong> examples to watch list operations and values change one turn at a time.</li>
-          <li>Select <strong>☆</strong> beside a useful cell to bookmark it. The Bookmarked cells button returns to that exact module, file, and cell later.</li>
-          <li>Use <strong>Logical explanation</strong> to trace when each line runs.</li>
-          <li>Use the Copy button only when you need to test a code chunk.</li>
+          <li>Start with <strong>Overview</strong>. Do not open the full source yet.</li>
+          <li>Use <strong>Step-by-step</strong> to see what happens after a click, page load, or database response.</li>
+          <li>Use <strong>Screen &amp; styles</strong> when you want to understand the visible JSX and Tailwind layout.</li>
+          <li>Open <strong>Full code</strong> only for the exact function or cell you are currently studying. Turn on detailed tools later if you want extra function stories and practice.</li>
         </ol>
       </section>
 
@@ -154,23 +147,37 @@
 │   ├── index.css                      Active global CSS and Tailwind import
 │   ├── App.css                        Existing but currently unimported CSS
 │   ├── lib/supabase.js                Shared browser Supabase client
+│   ├── lib/shiftSchedule.js            Shift dates and schedule calculations
+│   ├── lib/adminLogHelpers.js          Admin log formatting helpers
+│   ├── lib/payrollConcernOptions.js    Concern categories and labels
+│   ├── context/                         Theme, install prompt, and shared utilities
+│   ├── assets/                          Brand and starter image files
 │   ├── pages/
 │   │   ├── Login.jsx                  Password sign-in form
 │   │   ├── Register.jsx               Registration and validation
 │   │   ├── Home.jsx                   Employee timekeeping controller
-│   │   ├── Admin.jsx                  Admin logs, CSV, and reminders
-│   │   └── Shift.jsx                  Baselines and date-specific schedules
+│   │   ├── Admin.jsx                  Coordinates admin data and actions
+│   │   ├── AdminLayout.jsx             Shared administrator page frame
+│   │   ├── Shift.jsx                  Coordinates shift data and actions
+│   │   └── PayrollConcerns.jsx         Concern creation, review, and updates
 │   └── components/
 │       ├── Navbar.jsx                 Shared navigation and identity
 │       ├── AlertMessage.jsx            Temporary employee feedback
 │       ├── TimeButtons.jsx             Time In/Out controls
-│       └── WorkLog.jsx                 Employee history display
+│       ├── WorkLog.jsx                 Employee history display
+│       ├── admin/                       Admin tabs, logs, and reminder UI
+│       ├── payroll/                     Concern form and concern cards
+│       ├── shifts/                      Shift header and schedule editors
+│       ├── PublicUtilities.jsx          Shared theme/install controls
+│       └── PwaInstallHelp.jsx           Install instructions and prompt UI
+├── public/                              PWA manifest, worker, icons, and favicon
+├── scripts/generate-pwa-icons.mjs       Builds installable PNG app icons
 └── supabase/
     ├── functions/process-email-reminders/index.ts
     │                                      Due-checking and Brevo worker
     └── migrations/*.sql                  Tables, relationships, constraints, RLS
-docs/modules/SHIFT_SCHEMA.sql              Shift schema reference taught in module 9</code></pre>
-        <aside class="callout warning"><strong>Intentionally not embedded</strong><code>.env</code> secret values, generated <code>package-lock.json</code>, build output, dependencies, binary images, Git metadata, and empty files are not learning source code.</aside>
+docs/                                      This learning guide and shift references</code></pre>
+        <aside class="callout warning"><strong>Represented without source text</strong><code>.env</code> secret values are never embedded. Generated <code>package-lock.json</code>, build output, installed dependencies, Git metadata, and binary PNG/AVIF image bytes are described by purpose instead of being printed as unreadable source code. Every editable text source is checked automatically by the guide generator.</aside>
       </section>
 
       <section class="lesson">
@@ -501,6 +508,15 @@ if (password !== confirmPassword) {
         <div class="module-panel" id="nav-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>The parent renders Navbar.</strong><span>Props describe the current user and permitted interface.</span></li><li><strong>React evaluates <code>isAdmin</code>.</strong><span>Admin-only link and label are included or skipped.</span></li><li><strong>Tailwind arranges the children.</strong><span>Mobile uses a column; <code>md:flex-row</code> uses a row on wider screens.</span></li><li><strong>Sign Out is clicked.</strong><span>The parent callback calls Supabase, and App's auth listener clears the session.</span></li></ol></div>
       </section>
 
+      <section class="lesson module-section" id="utilities">
+        <div class="module-heading"><span class="card-number">4</span><div><h2>Shared layouts and application utilities</h2><p>Provides the administrator page frame and makes theme/PWA actions available across pages without repeating the same logic.</p></div></div>
+        <ul class="file-list"><li><code>src/pages/AdminLayout.jsx</code></li><li><code>src/components/PublicUtilities.jsx</code></li><li><code>src/context/AppUtilitiesContext.jsx</code></li><li><code>src/context/appUtilities.js</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Shared utility views"><button class="module-tab" role="tab" aria-selected="true" data-panel="utilities-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="utilities-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="utilities-logic">Logical explanation</button></div>
+        <div class="module-panel" id="utilities-overall" role="tabpanel"><p><code>AppUtilitiesContext</code> owns values that several unrelated pages need, including the selected theme and the browser’s install event. <code>PublicUtilities</code> turns those values into visible controls. <code>AdminLayout</code> provides one consistent administrator header and content boundary, then renders each admin page inside its <code>children</code> position.</p><div class="flow"><div>Provider stores shared state</div><div>Context exposes values/actions</div><div>Utility controls consume context</div><div>AdminLayout receives page content</div><div>Shared interface renders</div></div></div>
+        <div class="module-panel" id="utilities-code" role="tabpanel" hidden><p>The complete provider, context helper, utility controls, and administrator layout load here as notebook cells.</p></div>
+        <div class="module-panel" id="utilities-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>The provider wraps the application.</strong><span>Its state remains available while users move between routes.</span></li><li><strong>Child components call the context hook.</strong><span>They receive the same theme and installation actions without long prop chains.</span></li><li><strong>PublicUtilities renders global controls.</strong><span>The control calls the action supplied by context.</span></li><li><strong>AdminLayout receives children.</strong><span>Each administrator module supplies its unique content inside the shared frame.</span></li></ol></div>
+      </section>
+
       <section class="lesson module-section" id="timekeeping">
         <div class="module-heading"><span class="card-number">4</span><div><h2>Employee timekeeping</h2><p>Loads the employee session, prevents duplicate actions, and records Time In and Time Out.</p></div></div>
         <ul class="file-list"><li><code>src/pages/Home.jsx</code></li><li><code>src/components/TimeButtons.jsx</code></li><li><code>src/components/AlertMessage.jsx</code></li></ul>
@@ -557,7 +573,7 @@ const totalMinutes = Math.round(
 
       <section class="lesson module-section" id="adminlogs">
         <div class="module-heading"><span class="card-number">6</span><div><h2>Administrator logs, search, pagination, and CSV export</h2><p>Lets Postgres search and paginate the table while a separate batched query prepares the complete export.</p></div></div>
-        <ul class="file-list"><li><code>src/pages/Admin.jsx</code></li></ul>
+        <ul class="file-list"><li><code>src/pages/Admin.jsx</code></li><li><code>src/components/admin/WorkLogsPanel.jsx</code></li><li><code>src/components/admin/AdminTabs.jsx</code></li><li><code>src/lib/adminLogHelpers.js</code></li></ul>
         <div class="module-tabs" role="tablist" aria-label="Admin log views"><button class="module-tab" role="tab" aria-selected="true" data-panel="admin-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="admin-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="admin-logic">Logical explanation</button></div>
         <div class="module-panel" id="admin-overall" role="tabpanel"><p>The table requests only 20 rows at a time from <code>admin_work_logs</code>. A 400 ms debounce waits until typing pauses before changing <code>debouncedSearch</code>. Because <code>page</code>, <code>debouncedSearch</code>, and <code>refreshNumber</code> are effect dependencies, changing any of them reruns the table query. Export is deliberately separate: it retrieves every matching row in batches of 1,000 so the downloaded CSV is complete even though the screen shows one page.</p></div>
         <div class="module-panel" id="admin-code" role="tabpanel" hidden>
@@ -615,7 +631,7 @@ URL.revokeObjectURL(url)</code></pre></div>
 
       <section class="lesson module-section" id="reminders">
         <div class="module-heading"><span class="card-number">7</span><div><h2>Recurring reminder scheduling</h2><p>Lets an administrator choose employee, weekdays, time, subject, and message.</p></div></div>
-        <ul class="file-list"><li><code>src/pages/Admin.jsx</code></li><li><code>public.email_reminders</code></li></ul>
+        <ul class="file-list"><li><code>src/pages/Admin.jsx</code></li><li><code>src/components/admin/ReminderManager.jsx</code></li><li><code>src/components/admin/AdminTabs.jsx</code></li><li><code>public.email_reminders</code></li></ul>
         <div class="module-tabs" role="tablist" aria-label="Reminder views"><button class="module-tab" role="tab" aria-selected="true" data-panel="rem-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="rem-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="rem-logic">Logical explanation</button></div>
         <div class="module-panel" id="rem-overall" role="tabpanel"><p>Admin stores form values in one <code>reminder</code> object. Weekdays use JavaScript day numbers: Sunday 0 through Saturday 6. Saving inserts an active recurring schedule. Cancelling permanently deletes its row, so only active schedules remain in the list.</p></div>
         <div class="module-panel" id="rem-code" role="tabpanel" hidden>
@@ -684,7 +700,7 @@ URL.revokeObjectURL(url)</code></pre></div>
 
       <section class="lesson module-section" id="shifts">
         <div class="module-heading"><span class="card-number">9</span><div><h2>Shift schedules and date overrides</h2><p>Combines a repeating weekly baseline with exceptions for exact calendar dates.</p></div></div>
-        <ul class="file-list"><li><code>src/pages/Shift.jsx</code></li><li><code>src/App.jsx</code></li><li><code>src/components/Navbar.jsx</code></li><li><code>docs/modules/SHIFT_SCHEMA.sql</code></li></ul>
+        <ul class="file-list"><li><code>src/pages/Shift.jsx</code></li><li><code>src/components/shifts/ShiftHeader.jsx</code></li><li><code>src/components/shifts/BaselineScheduleEditor.jsx</code></li><li><code>src/components/shifts/WeekScheduleEditor.jsx</code></li><li><code>src/lib/shiftSchedule.js</code></li><li><code>docs/modules/SHIFT_SCHEMA.sql</code></li></ul>
         <div class="module-tabs" role="tablist" aria-label="Shift schedule views"><button class="module-tab" role="tab" aria-selected="true" data-panel="shift-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="shift-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="shift-logic">Logical explanation</button></div>
         <div class="module-panel" id="shift-overall" role="tabpanel">
           <p><code>shifts</code> stores the employee’s normal repeating weekday pattern. <code>shift_overrides</code> stores only dates that differ from that pattern. The page loads both tables and builds one effective seven-day view by checking the exact date first and the weekday baseline second.</p>
@@ -713,6 +729,15 @@ URL.revokeObjectURL(url)</code></pre></div>
           <li><strong>Specific-week save synchronizes exceptions.</strong><span>Custom times, overnight status, and date-specific days off/notes are upserted using <code>user_id,shift_date</code>. Dates switched to Use baseline have their override deleted.</span></li>
           <li><strong>The page reloads permitted rows.</strong><span>Supabase applies GRANT, RLS, and constraints before returning the saved result for React to render.</span></li>
         </ol></div>
+      </section>
+
+      <section class="lesson module-section" id="payroll">
+        <div class="module-heading"><span class="card-number">11</span><div><h2>Payroll concerns and administrator review</h2><p>Lets employees report date-based payroll issues and lets administrators create, filter, inspect, and update concerns.</p></div></div>
+        <ul class="file-list"><li><code>src/pages/PayrollConcerns.jsx</code></li><li><code>src/components/payroll/ConcernForm.jsx</code></li><li><code>src/components/payroll/ConcernCard.jsx</code></li><li><code>src/lib/payrollConcernOptions.js</code></li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Payroll concern views"><button class="module-tab" role="tab" aria-selected="true" data-panel="payroll-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="payroll-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="payroll-logic">Logical explanation</button></div>
+        <div class="module-panel" id="payroll-overall" role="tabpanel"><p><code>PayrollConcerns</code> owns the database requests, filters, selected concern, and role-dependent actions. <code>ConcernForm</code> owns the temporary form fields until submission. <code>ConcernCard</code> renders one saved concern and reports clicks back to the page. The options helper gives stored category/status values consistent human-readable labels.</p><div class="flow"><div>User fills concern form</div><div>Form calls submission callback</div><div>Page inserts Supabase row</div><div>Returned concern enters state</div><div>Cards and filters rerender</div><div>Admin updates status</div></div></div>
+        <div class="module-panel" id="payroll-code" role="tabpanel" hidden><p>The full page, form, card, and option helpers load here as notebook cells.</p></div>
+        <div class="module-panel" id="payroll-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>The page loads permitted concerns.</strong><span>Employees receive their own rows; administrators receive the rows allowed by the database policy.</span></li><li><strong>The form stores a draft.</strong><span>Name-based input handling replaces the matching property while preserving the other fields.</span></li><li><strong>Submission calls the parent callback.</strong><span>The page—not the reusable form—performs the database insert.</span></li><li><strong>The returned row updates React state.</strong><span>The new card appears without a complete page reload.</span></li><li><strong>Selecting a card reveals details.</strong><span>Optional callback syntax safely calls the supplied selection function.</span></li><li><strong>An administrator changes workflow status.</strong><span>Supabase persists the update and the matching state object is replaced.</span></li></ol></div>
       </section>
 
       <section class="lesson module-section" id="database">
@@ -765,6 +790,33 @@ using (
 }</code></pre></div>
         </div>
         <div class="module-panel" id="style-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong><code>main.jsx</code> imports <code>index.css</code>.</strong><span>Vite includes it in the application bundle.</span></li><li><strong>Tailwind scans JSX class names.</strong><span>It generates styles such as <code>flex</code>, <code>md:flex-row</code>, and <code>bg-slate-900</code>.</span></li><li><strong>Base body rules apply.</strong><span>Page components then override colors and layout using utilities.</span></li><li><strong>Unimported styles produce no interface change.</strong><span><code>App.css</code> does not run merely because the file exists.</span></li></ol></div>
+      </section>
+
+      <section class="lesson module-section" id="pwa">
+        <div class="module-heading"><span class="card-number">14</span><div><h2>PWA installation and offline application shell</h2><p>Explains how the website becomes installable, launches like an app, and retains a cached shell when the network is unavailable.</p></div></div>
+        <ul class="file-list"><li><code>index.html</code></li><li><code>src/main.jsx</code></li><li><code>src/components/PwaInstallHelp.jsx</code></li><li><code>public/manifest.webmanifest</code></li><li><code>public/sw.js</code></li><li><code>public/pwa-icon.svg</code></li><li><code>scripts/generate-pwa-icons.mjs</code></li><li><code>public/pwa-192.png</code> and <code>public/pwa-512.png</code> (binary outputs)</li></ul>
+        <div class="module-tabs" role="tablist" aria-label="PWA views"><button class="module-tab" role="tab" aria-selected="true" data-panel="pwa-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="pwa-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="pwa-logic">Logical explanation</button></div>
+        <div class="module-panel" id="pwa-overall" role="tabpanel"><p>The manifest describes the installed application’s name, start address, colors, display mode, and icons. <code>index.html</code> links that manifest. In production, <code>main.jsx</code> registers <code>sw.js</code>. The service worker caches the application shell and supplies the cached HTML when navigation cannot reach the network. <code>PwaInstallHelp</code> explains or starts installation from the interface.</p><div class="flow"><div>Browser reads manifest link</div><div>Production app registers worker</div><div>Worker caches app shell</div><div>Browser offers installation</div><div>Installed shortcut opens start_url</div><div>Worker assists offline navigation</div></div><aside class="callout warning"><strong>Development behavior</strong>The registration condition uses <code>import.meta.env.PROD</code>, so <code>npm run dev</code> intentionally does not install this service worker. Test it with a production build served over HTTPS or localhost.</aside></div>
+        <div class="module-panel" id="pwa-code" role="tabpanel" hidden><p>The full manifest, registration, service worker, install-help component, SVG icon, and icon-generation script load here.</p></div>
+        <div class="module-panel" id="pwa-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>The HTML points to the manifest.</strong><span>This gives the browser install metadata before React renders.</span></li><li><strong>The production page finishes loading.</strong><span><code>main.jsx</code> asks the browser to register <code>/sw.js</code>.</span></li><li><strong>The worker installs.</strong><span>It opens the named cache and stores the root HTML, manifest, and icons.</span></li><li><strong>The worker activates.</strong><span>Old cache versions are removed and the new worker controls open pages.</span></li><li><strong>A same-origin GET occurs.</strong><span>Navigation tries the network and falls back to cached HTML; static assets try cache before network.</span></li><li><strong>The browser decides installability.</strong><span>A valid manifest, icons, secure origin, and service worker allow an install prompt or browser menu option.</span></li></ol></div>
+      </section>
+
+      <section class="lesson module-section" id="projectfiles">
+        <div class="module-heading"><span class="card-number">15</span><div><h2>Assets and project reference files</h2><p>Accounts for the remaining editable text assets and human-facing setup/reference material.</p></div></div>
+        <ul class="file-list"><li><code>.gitignore</code></li><li><code>README.md</code></li><li><code>domains-instructions.txt</code></li><li><code>reqts.txt</code></li><li><code>public/favicon.svg</code></li><li><code>public/icons.svg</code></li><li><code>src/assets/react.svg</code></li><li><code>src/assets/vite.svg</code></li><li><code>docs/assets/ui/admin-dashboard.svg</code></li><li><code>docs/assets/ui/employee-dashboard.svg</code></li><li><code>docs/assets/ui/shift-scheduler.svg</code></li><li><code>docs/modules/SHIFT_MODULE.md</code></li><li><code>docs/modules/SHIFT_MODULE.html</code></li><li><code>src/assets/Aqler White.avif</code> and <code>src/assets/hero.png</code> (binary)</li><li><code>docs/assets/ui/guide-ui-mobile.png</code>, <code>login-desktop.png</code>, <code>login-mobile.png</code>, <code>register-desktop.png</code>, and <code>register-mobile.png</code> (binary)</li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Project file views"><button class="module-tab" role="tab" aria-selected="true" data-panel="projectfiles-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="projectfiles-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="projectfiles-logic">Logical explanation</button></div>
+        <div class="module-panel" id="projectfiles-overall" role="tabpanel"><p>These files do not own a React feature, but they still have a purpose. Markdown and text files record setup or design notes. SVG files are readable vector-image source. PNG and AVIF files are binary pictures, so the guide identifies their paths and roles without printing meaningless byte data. <code>package-lock.json</code> is generated by npm to lock dependency versions and is intentionally described rather than taught line by line.</p></div>
+        <div class="module-panel" id="projectfiles-code" role="tabpanel" hidden><p>All editable text references and SVG sources load here. Binary image bytes and the generated dependency lockfile are intentionally not rendered as code.</p></div>
+        <div class="module-panel" id="projectfiles-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>Build tools read configuration and dependency metadata.</strong><span>People usually edit package.json and allow npm to regenerate the lockfile.</span></li><li><strong>The browser requests image paths.</strong><span>Vite bundles imported assets while files in public keep their root-relative URLs.</span></li><li><strong>Documentation records decisions.</strong><span>It does not execute inside the timesheet application.</span></li></ol></div>
+      </section>
+
+      <section class="lesson module-section" id="guideinternals">
+        <div class="module-heading"><span class="card-number">16</span><div><h2>How this learning guide works</h2><p>Documents the guide’s own HTML, styling, navigation, notebook generator, and older reference pages.</p></div></div>
+        <ul class="file-list"><li><code>docs/index.html</code></li><li><code>docs/assets/guide.css</code></li><li><code>docs/assets/guide.js</code></li><li><code>docs/generate-source-guide.mjs</code></li><li><code>docs/BEGINNER_CODE_GUIDE.md</code></li><li><code>docs/BEGINNER_CODE_GUIDE.html</code></li><li><code>docs/assets/source-guide-data.js</code> (generated output)</li></ul>
+        <div class="module-tabs" role="tablist" aria-label="Learning guide implementation views"><button class="module-tab" role="tab" aria-selected="true" data-panel="guideinternals-overall">Overall</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="guideinternals-code">Code chunks</button><button class="module-tab" role="tab" aria-selected="false" tabindex="-1" data-panel="guideinternals-logic">Logical explanation</button></div>
+        <div class="module-panel" id="guideinternals-overall" role="tabpanel"><p><code>docs/index.html</code> contains the written lessons and module containers. <code>guide.css</code> styles the learning interface. <code>guide.js</code> adds navigation, detailed modes, bookmarks, code notebooks, explanations, and progress. The generator reads the real project files and rebuilds <code>source-guide-data.js</code>. Its coverage check stops generation if a new editable text file is not assigned to a guide module.</p><div class="flow"><div>Real project source changes</div><div>Generator checks file coverage</div><div>Source becomes notebook cells</div><div>Generated data loads in browser</div><div>Guide JavaScript renders lessons</div></div></div>
+        <div class="module-panel" id="guideinternals-code" role="tabpanel" hidden><p>The complete guide implementation and its reference documents load here. The generated source-data file is excluded because it is the output being produced and would recursively contain itself.</p></div>
+        <div class="module-panel" id="guideinternals-logic" role="tabpanel" hidden><ol class="logic-steps"><li><strong>The generator inventories the repository.</strong><span>Known generated, secret, dependency, and binary files are excluded for explicit reasons.</span></li><li><strong>Every editable text file must belong to a module.</strong><span>A missing assignment throws an error instead of silently making the guide incomplete.</span></li><li><strong>Files are divided into reconstructable cells.</strong><span>A verification step confirms that joining the cells recreates every original line.</span></li><li><strong>The browser loads the snapshot.</strong><span>Guide JavaScript turns it into full-code, function-story, and step-by-step views.</span></li></ol></div>
       </section>
 
       <section class="study-order">

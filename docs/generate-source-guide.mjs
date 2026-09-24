@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { extname, relative, resolve } from 'node:path'
 
@@ -16,22 +16,47 @@ const moduleFiles = {
     'src/lib/supabase.js',
     'src/App.jsx',
   ],
-  auth: ['src/pages/Login.jsx', 'src/pages/Register.jsx'],
+  auth: ['src/pages/Login.jsx', 'src/pages/Register.jsx', 'src/pages/PasswordReset.jsx'],
   navbar: ['src/components/Navbar.jsx'],
+  utilities: [
+    'src/pages/AdminLayout.jsx',
+    'src/components/PublicUtilities.jsx',
+    'src/context/AppUtilitiesContext.jsx',
+    'src/context/appUtilities.js',
+  ],
   timekeeping: [
     'src/pages/Home.jsx',
     'src/components/TimeButtons.jsx',
     'src/components/AlertMessage.jsx',
   ],
   worklog: ['src/components/WorkLog.jsx'],
-  adminlogs: ['src/pages/Admin.jsx'],
-  reminders: ['src/pages/Admin.jsx'],
+  adminlogs: [
+    'src/pages/Admin.jsx',
+    'src/components/admin/AdminTabs.jsx',
+    'src/components/admin/WorkLogsPanel.jsx',
+    'src/lib/adminLogHelpers.js',
+  ],
+  reminders: [
+    'src/pages/Admin.jsx',
+    'src/components/admin/AdminTabs.jsx',
+    'src/components/admin/ReminderManager.jsx',
+  ],
   processor: ['supabase/functions/process-email-reminders/index.ts'],
   shifts: [
     'src/pages/Shift.jsx',
+    'src/components/shifts/ShiftHeader.jsx',
+    'src/components/shifts/BaselineScheduleEditor.jsx',
+    'src/components/shifts/WeekScheduleEditor.jsx',
+    'src/lib/shiftSchedule.js',
     'src/App.jsx',
     'src/components/Navbar.jsx',
     'docs/modules/SHIFT_SCHEMA.sql',
+  ],
+  payroll: [
+    'src/pages/PayrollConcerns.jsx',
+    'src/components/payroll/ConcernForm.jsx',
+    'src/components/payroll/ConcernCard.jsx',
+    'src/lib/payrollConcernOptions.js',
   ],
   database: [
     'supabase/migrations/20260813181500_create_timesheet_schema.sql',
@@ -47,7 +72,81 @@ const moduleFiles = {
     'src/index.css',
     'src/App.css',
   ],
+  pwa: [
+    'index.html',
+    'src/main.jsx',
+    'src/components/PwaInstallHelp.jsx',
+    'public/manifest.webmanifest',
+    'public/sw.js',
+    'public/pwa-icon.svg',
+    'scripts/generate-pwa-icons.mjs',
+  ],
+  projectfiles: [
+    '.gitignore',
+    'README.md',
+    'domains-instructions.txt',
+    'reqts.txt',
+    'public/favicon.svg',
+    'public/icons.svg',
+    'src/assets/react.svg',
+    'src/assets/vite.svg',
+    'docs/assets/ui/admin-dashboard.svg',
+    'docs/assets/ui/employee-dashboard.svg',
+    'docs/assets/ui/shift-scheduler.svg',
+    'docs/modules/SHIFT_MODULE.md',
+    'docs/modules/SHIFT_MODULE.html',
+  ],
+  guideinternals: [
+    'docs/index.html',
+    'docs/assets/guide.css',
+    'docs/assets/guide.js',
+    'docs/generate-source-guide.mjs',
+    'docs/BEGINNER_CODE_GUIDE.md',
+    'docs/BEGINNER_CODE_GUIDE.html',
+  ],
 }
+
+const intentionallyNotEmbedded = new Set([
+  'package-lock.json',
+  'docs/assets/source-guide-data.js',
+])
+
+const representedBinaryFiles = new Set([
+  'docs/assets/ui/guide-ui-mobile.png',
+  'docs/assets/ui/login-desktop.png',
+  'docs/assets/ui/login-mobile.png',
+  'docs/assets/ui/register-desktop.png',
+  'docs/assets/ui/register-mobile.png',
+  'public/pwa-192.png',
+  'public/pwa-512.png',
+  'src/assets/Aqler White.avif',
+  'src/assets/hero.png',
+])
+
+function listProjectFiles(directory = projectRoot) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    if (['.git', 'dist', 'node_modules'].includes(entry.name)) return []
+    const absolutePath = resolve(directory, entry.name)
+    if (entry.isDirectory()) return listProjectFiles(absolutePath)
+    return [relative(projectRoot, absolutePath).replaceAll('\\', '/')]
+  })
+}
+
+function verifyGuideCoverage() {
+  const embeddedFiles = new Set(Object.values(moduleFiles).flat())
+  const missingFiles = listProjectFiles().filter((file) => {
+    if (file === '.env' || file.startsWith('.env.')) return false
+    if (intentionallyNotEmbedded.has(file)) return false
+    if (representedBinaryFiles.has(file)) return false
+    return !embeddedFiles.has(file)
+  })
+
+  if (missingFiles.length) {
+    throw new Error(`Files missing from the learning guide:\n${missingFiles.join('\n')}`)
+  }
+}
+
+verifyGuideCoverage()
 
 function explainHtml(trimmed) {
   if (!trimmed) return 'Blank line: separates the document head from the visible page body.'
@@ -1268,7 +1367,12 @@ const modules = Object.fromEntries(
     files.map((file, fileIndex) => {
       const absolutePath = resolve(projectRoot, file)
       const source = readFileSync(absolutePath, 'utf8').replace(/\r\n/g, '\n')
-      const extension = extname(file)
+      const detectedExtension = extname(file)
+      const extension = detectedExtension === '.webmanifest'
+        ? '.json'
+        : detectedExtension === '.svg'
+          ? '.html'
+          : detectedExtension
       const lines = (source.endsWith('\n') ? source.slice(0, -1) : source).split('\n')
       const chunks = makeChunks(lines, extension, moduleId, fileIndex)
       const functions = extractFunctionGuides(source, extension)

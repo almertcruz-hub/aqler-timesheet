@@ -93,7 +93,7 @@ function renderCompleteSource(moduleId, codePanel) {
     button.textContent = level === 'plain' ? 'Plain English' : level === 'beginner' ? 'Beginner code' : 'Technical detail'
     return button
   })
-  let mode = 'complete'
+  let mode = 'guided'
   let activeChapter = chapters[0] || 'all'
   let learningLevel = 'plain'
   try {
@@ -767,6 +767,10 @@ const flowVisualConfig = {
     image: 'assets/ui/employee-dashboard.svg',
     overview: 'Look at the numbered navigation region at the top. Navbar.jsx produces that shared area on every protected page.',
   },
+  utilities: {
+    image: 'assets/ui/admin-dashboard.svg',
+    overview: 'The common administrator frame and global utility controls surround feature-specific content instead of being recreated by each page.',
+  },
   timekeeping: {
     image: 'assets/ui/employee-dashboard.svg',
     overview: 'The timekeeping stages ultimately control the status card and Time In or Time Out controls marked in this employee screen.',
@@ -791,6 +795,10 @@ const flowVisualConfig = {
     image: 'assets/ui/shift-scheduler.svg',
     overview: 'Use the numbered regions in this picture while following the Shift flow. The code supplies the employee, tab, weekday editor, effective schedule cards, overnight checkboxes, day-off notes, and +1 day labels.',
   },
+  payroll: {
+    image: 'assets/ui/admin-dashboard.svg',
+    overview: 'Payroll concerns use the same administrator shell while their form, filters, cards, detail panel, and status actions provide the feature-specific interface.',
+  },
   database: {
     image: 'assets/ui/admin-dashboard.svg',
     overview: 'SQL does not draw this screen. It controls whether the React code is allowed to receive the records needed to fill it.',
@@ -798,6 +806,18 @@ const flowVisualConfig = {
   styling: {
     image: 'assets/ui/login-desktop.png',
     overview: 'The elements come from JSX; their spacing, colors, widths, borders, and responsive behavior come from the CSS rules explained in this flow.',
+  },
+  pwa: {
+    image: 'assets/ui/employee-dashboard.svg',
+    overview: 'The installed PWA displays the same timesheet interface. Its manifest and service worker affect how the browser installs and loads it, not the React layout itself.',
+  },
+  projectfiles: {
+    image: 'assets/ui/employee-dashboard.svg',
+    overview: 'Images and icons support the visible application and guide, while reference files explain setup. Many have no independent interactive screen.',
+  },
+  guideinternals: {
+    image: 'assets/ui/guide-ui-mobile.png',
+    overview: 'This picture shows the guide interface produced by docs/index.html, guide.css, guide.js, and the generated source snapshot.',
   },
 }
 
@@ -1076,14 +1096,19 @@ const uiLessonConfig = {
   startup: { title: 'From the empty HTML root to the first React screen', intro: 'The browser begins with a small index.html shell. main.jsx mounts React into #root, App chooses a route, and the selected page component returns the visible JSX.', images: [['assets/ui/login-desktop.png', 'Real desktop login screen rendered by the current app.']] },
   auth: { title: 'Login and registration forms', intro: 'These screens use labels, controlled inputs, submit buttons, conditional error text, and links between routes. The mobile pictures show how the same JSX naturally narrows to one column.', images: [['assets/ui/login-desktop.png', 'Real current login screen — desktop.'], ['assets/ui/login-mobile.png', 'Real current login screen — 390px mobile viewport.'], ['assets/ui/register-desktop.png', 'Real current registration screen — desktop.'], ['assets/ui/register-mobile.png', 'Real current registration screen — 390px mobile viewport.']] },
   navbar: { title: 'Shared navigation and signed-in identity', intro: 'Navbar.jsx creates the top bar, route links, the email/avatar badge, the administrator label, and the sign-out action. Flexbox places the immediate children in a row until responsive rules wrap or constrain them.', images: [['assets/ui/employee-dashboard.svg', 'Annotated employee interface showing where the shared Navbar sits.']] },
+  utilities: { title: 'Shared administrator frame, theme control, and PWA install control', intro: 'The layout places feature content inside a consistent administrator shell. Context-backed utility controls can appear across routes without each page reimplementing their state.', images: [['assets/ui/admin-dashboard.svg', 'Administrator interface inside the shared layout.']] },
   timekeeping: { title: 'Employee time controls and status feedback', intro: 'React state decides whether Time In or Time Out is available, whether an operation is loading, and what feedback appears. The JSX describes both possible states; conditions choose which one reaches the DOM.', images: [['assets/ui/employee-dashboard.svg', 'Annotated employee dashboard with the state-driven time controls.']] },
   worklog: { title: 'Repeated work-log rows', intro: 'The table structure is stable, but its body is data-driven. map visits the current log list and returns one row for each item. Responsive wrappers prevent the table from breaking the page on narrow screens.', images: [['assets/ui/employee-dashboard.svg', 'Annotated employee dashboard showing the work-log region produced from rows.']] },
   adminlogs: { title: 'Administrator server search, pagination, export, and employee table', intro: 'The page combines a controlled search field, 400 ms debounce, 20-row server page, manual refresh, and a separate batched all-results export. Layout classes move controls between stacked and horizontal arrangements as screen width changes.', images: [['assets/ui/admin-dashboard.svg', 'Annotated administrator logs and reminder interface.']] },
   reminders: { title: 'Recurring-email form and active schedule list', intro: 'Form state fills the employee, weekday, time, and message controls. Active reminder rows are rendered as cards with a row-specific cancel action and loading state.', images: [['assets/ui/admin-dashboard.svg', 'Annotated administrator interface showing reminder creation and active schedules.']] },
   processor: { title: 'Server behavior behind the reminder UI', intro: 'The Edge Function has no direct JSX. The administrator sees its results indirectly when reminder rows gain sent or error information. The picture shows the screen that relies on this background work.', images: [['assets/ui/admin-dashboard.svg', 'The visible administrator UI supported by the invisible email processor.']] },
   shifts: { title: 'Recurring shifts, exact-date overrides, overnight work, and employee preview', intro: 'Shift.jsx uses tabs, employee selection, weekday/date buttons, time inputs, overnight checkboxes, notes, week navigation, and seven repeated date cards. State chooses the current employee, tab, week, selections, and edited schedule values; Supabase stores overnight explicitly.', images: [['assets/ui/shift-scheduler.svg', 'Annotated administrator Shift scheduler showing the major visual regions and the state that controls them.']] },
+  payroll: { title: 'Payroll concern form, list, and administrator workflow', intro: 'The form collects a category, date range, subject, and explanation. Saved concern objects become selectable cards; administrator-only controls update their workflow status and notes.', images: [['assets/ui/admin-dashboard.svg', 'The shared administrator shell used by management modules.']] },
   database: { title: 'Database rules behind every visible screen', intro: 'SQL does not create browser elements. It determines which rows the JSX is allowed to receive. When RLS rejects a request, React shows an error or empty state instead of protected information.', images: [['assets/ui/admin-dashboard.svg', 'The administrator UI can show cross-employee rows only because its database policies allow them.'], ['assets/ui/employee-dashboard.svg', 'The employee UI receives only that employee’s permitted rows.']] },
   styling: { title: 'Global CSS, Tailwind utilities, and responsive changes', intro: 'index.css establishes page-wide defaults. Tailwind classes written in JSX create most component styling. Prefixes such as sm:, md:, and lg: apply a utility only at or above that breakpoint.', images: [['assets/ui/login-desktop.png', 'Desktop layout produced from the same authentication JSX.'], ['assets/ui/login-mobile.png', 'Mobile layout after the viewport becomes narrower.'], ['assets/ui/shift-scheduler.svg', 'Annotated complex layout using flex, grid, gaps, borders, colors, and responsive wrapping.']] },
+  pwa: { title: 'Installable browser application and cached shell', intro: 'The installed PWA uses the existing React screens. The manifest controls install identity and launch appearance; the service worker controls caching and offline navigation.', images: [['assets/ui/employee-dashboard.svg', 'The same employee interface when opened in a browser or installed PWA.']] },
+  projectfiles: { title: 'Icons, pictures, and human reference material', intro: 'SVG files contain readable drawing markup. PNG and AVIF files are binary images. Markdown and text files help people set up or understand the project rather than rendering an application route.', images: [['assets/ui/employee-dashboard.svg', 'One interface that consumes the project’s visual assets.']] },
+  guideinternals: { title: 'The learning interface itself', intro: 'Static lesson HTML is enhanced by guide JavaScript, styled by guide CSS, and filled with an exact generated snapshot of the project source.', images: [['assets/ui/guide-ui-mobile.png', 'Mobile view of the interactive learning guide.']] },
 }
 
 function tailwindMeaning(className) {
@@ -1783,6 +1808,50 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('aqler-bookmarks-changed', renderBookmarks)
   renderBookmarks()
 
+  const detailModeButton = document.querySelector('[data-detail-mode]')
+  let detailedMode = false
+  try {
+    detailedMode = localStorage.getItem('aqler-guide-detail-mode') === 'detailed'
+  } catch {
+    detailedMode = false
+  }
+
+  const applyDetailMode = () => {
+    document.body.classList.toggle('guide-detailed', detailedMode)
+    document.body.classList.toggle('guide-simple', !detailedMode)
+    detailModeButton?.setAttribute('aria-pressed', String(detailedMode))
+    if (detailModeButton) {
+      detailModeButton.textContent = detailedMode
+        ? 'Use simple view'
+        : 'Show detailed tools'
+    }
+  }
+
+  applyDetailMode()
+
+  detailModeButton?.addEventListener('click', () => {
+    detailedMode = !detailedMode
+    try {
+      localStorage.setItem(
+        'aqler-guide-detail-mode',
+        detailedMode ? 'detailed' : 'simple'
+      )
+    } catch {
+      // The preference is optional when browser storage is unavailable.
+    }
+    applyDetailMode()
+
+    if (!detailedMode) {
+      const selectedDetailTab = document.querySelector(
+        '.module-section:not([hidden]) .module-tab[data-detail-only="true"][aria-selected="true"]'
+      )
+      const overallTab = selectedDetailTab
+        ?.closest('.module-tabs')
+        ?.querySelector('[data-panel$="-overall"]')
+      overallTab?.click()
+    }
+  })
+
   let preferredModuleView = 'overall'
   try {
     preferredModuleView = sessionStorage.getItem('aqler-guide-reading-level') || 'overall'
@@ -1791,6 +1860,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (!['overall', 'functions', 'flow', 'ui', 'code', 'logic'].includes(preferredModuleView)) {
+    preferredModuleView = 'overall'
+  }
+  if (!detailedMode && ['functions', 'logic'].includes(preferredModuleView)) {
     preferredModuleView = 'overall'
   }
 
@@ -1811,7 +1883,8 @@ document.addEventListener('DOMContentLoaded', () => {
     functionTab.setAttribute('aria-selected', 'false')
     functionTab.tabIndex = -1
     functionTab.dataset.panel = `${section.id}-functions`
-    functionTab.textContent = 'Whole functions'
+    functionTab.textContent = 'Function stories'
+    functionTab.dataset.detailOnly = 'true'
     functionPanel.className = 'module-panel'
     functionPanel.id = `${section.id}-functions`
     functionPanel.setAttribute('role', 'tabpanel')
@@ -1822,7 +1895,7 @@ document.addEventListener('DOMContentLoaded', () => {
     flowTab.setAttribute('aria-selected', 'false')
     flowTab.tabIndex = -1
     flowTab.dataset.panel = `${section.id}-flow`
-    flowTab.textContent = 'Guided code flow'
+    flowTab.textContent = 'Step-by-step'
     flowPanel.className = 'module-panel'
     flowPanel.id = `${section.id}-flow`
     flowPanel.setAttribute('role', 'tabpanel')
@@ -1833,13 +1906,24 @@ document.addEventListener('DOMContentLoaded', () => {
     uiTab.setAttribute('aria-selected', 'false')
     uiTab.tabIndex = -1
     uiTab.dataset.panel = `${section.id}-ui`
-    uiTab.textContent = 'UI, JSX & CSS'
+    uiTab.textContent = 'Screen & styles'
     uiPanel.className = 'module-panel'
     uiPanel.id = `${section.id}-ui`
     uiPanel.setAttribute('role', 'tabpanel')
     uiPanel.hidden = true
     codeTab?.before(functionTab, flowTab, uiTab)
     codePanel?.before(functionPanel, flowPanel, uiPanel)
+
+    const overallTab = [...tabList.querySelectorAll('.module-tab')]
+      .find((tab) => tab.dataset.panel.endsWith('-overall'))
+    const logicTab = [...tabList.querySelectorAll('.module-tab')]
+      .find((tab) => tab.dataset.panel.endsWith('-logic'))
+    if (overallTab) overallTab.textContent = 'Overview'
+    if (codeTab) codeTab.textContent = 'Full code'
+    if (logicTab) {
+      logicTab.textContent = 'Practice & recap'
+      logicTab.dataset.detailOnly = 'true'
+    }
   })
 
   setupGuideAssistant()
@@ -1882,16 +1966,17 @@ document.addEventListener('DOMContentLoaded', () => {
     tabList.addEventListener('keydown', (event) => {
       if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
 
-      const current = tabs.indexOf(document.activeElement)
+      const visibleTabs = tabs.filter((tab) => window.getComputedStyle(tab).display !== 'none')
+      const current = visibleTabs.indexOf(document.activeElement)
       let next = current
       if (event.key === 'Home') next = 0
-      if (event.key === 'End') next = tabs.length - 1
-      if (event.key === 'ArrowRight') next = (current + 1) % tabs.length
-      if (event.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length
+      if (event.key === 'End') next = visibleTabs.length - 1
+      if (event.key === 'ArrowRight') next = (current + 1) % visibleTabs.length
+      if (event.key === 'ArrowLeft') next = (current - 1 + visibleTabs.length) % visibleTabs.length
 
       event.preventDefault()
-      tabs[next].focus()
-      tabs[next].click()
+      visibleTabs[next].focus()
+      visibleTabs[next].click()
     })
   })
 
@@ -1931,6 +2016,18 @@ document.addEventListener('DOMContentLoaded', () => {
       work: 'Conditionally render links, identity, role, and responsive layout.',
       outputs: 'Navigation clicks or a call to the supplied sign-out function.',
       next: 'React Router changes pages; Supabase sign-out changes App session.',
+    },
+    utilities: {
+      before: 'Know that props move down a component tree and context can share values across distant components.',
+      outcome: 'Explain how the theme, PWA installation action, and administrator page frame are reused.',
+      model: 'A shared utility cabinet: the provider stores common tools, and any permitted child can take the same tool.',
+      mistake: 'Context is not permanent storage or authorization. It shares live browser state; the database still enforces access.',
+      question: 'Why use context instead of passing the theme action through every page and layout?',
+      answer: 'Context lets components beneath the provider read the shared value directly, avoiding a chain of props through components that do not use it.',
+      inputs: 'Saved theme preference, browser install event, administrator session, and child page content.',
+      work: 'Store shared state, expose actions, render global controls, and place admin children in a common frame.',
+      outputs: 'Theme/install controls and a consistent administrator layout.',
+      next: 'Feature pages render inside the layout and call shared context actions when needed.',
     },
     timekeeping: {
       before: 'Review state, refs, async/await, and database inserts.',
@@ -2004,6 +2101,18 @@ document.addEventListener('DOMContentLoaded', () => {
       outputs: 'An admin editor or employee read-only week, plus durable rows in shifts and shift_overrides.',
       next: 'The rendered employee week uses the override-first result; Supabase RLS remains the real authorization boundary.',
     },
+    payroll: {
+      before: 'Review controlled forms, callbacks, array map/filter, and Supabase insert/update queries.',
+      outcome: 'Trace one payroll concern from form draft to saved card and administrator status update.',
+      model: 'A support ticket: the employee reports an affected date range, and an administrator moves the ticket through a workflow.',
+      mistake: 'The form component collects input but does not own the permanent list. The page callback performs the database work and updates shared page state.',
+      question: 'Why does ConcernForm call onConcernSubmitted instead of inserting directly?',
+      answer: 'It keeps the form reusable and gives the parent page ownership of database requests, list state, errors, and role-specific behavior.',
+      inputs: 'Current user, category, subject, description, and affected start/end dates.',
+      work: 'Validate a form, insert/load/filter concerns, select a card, and update status or administrator notes.',
+      outputs: 'Saved concern rows, filtered cards, detail view, and updated workflow status.',
+      next: 'Supabase returns permitted rows and React redraws the list/detail interface.',
+    },
     database: {
       before: 'Know the difference between tables, rows, foreign keys, constraints, and policies.',
       outcome: 'Explain how GRANT, RLS, JWT roles, and constraints protect different things.',
@@ -2027,6 +2136,42 @@ document.addEventListener('DOMContentLoaded', () => {
       work: 'Scan utilities, process CSS, and bundle imported styles.',
       outputs: 'Global theme values, base rules, and generated utility CSS.',
       next: 'The browser applies the bundled styles to rendered JSX.',
+    },
+    pwa: {
+      before: 'Know that the browser can read files before React starts and that a service worker runs separately from the page.',
+      outcome: 'Explain what makes the timesheet installable and how its offline shell is cached.',
+      model: 'The manifest is the app’s identity card; the service worker is a small browser-side cache attendant.',
+      mistake: 'The service worker is intentionally not registered by npm run dev. Test installation using a production build on localhost or HTTPS.',
+      question: 'Why are both the manifest and service worker needed?',
+      answer: 'The manifest supplies install identity and launch behavior. The worker supplies controlled caching/offline behavior and participates in installability checks.',
+      inputs: 'Manifest metadata, icon files, production page load, install event, and same-origin GET requests.',
+      work: 'Register a worker, cache the shell, clean old caches, intercept requests, and expose installation help.',
+      outputs: 'An installable standalone app and a cached fallback shell.',
+      next: 'The browser—not React—creates the home-screen installation and launches start_url.',
+    },
+    projectfiles: {
+      before: 'Know the difference between executable source, human documentation, vector source, and binary files.',
+      outcome: 'Identify the purpose of every remaining project asset and reference file.',
+      model: 'A labelled storage room: not every item runs, but every item has an accountable purpose.',
+      mistake: 'Generated lockfiles and binary images should not be learned line by line; their role and generation path are what matter.',
+      question: 'Why does the guide list PNG/AVIF files without printing their contents?',
+      answer: 'They contain encoded binary image bytes rather than human-readable program instructions. The useful lesson is where they are used and how generated images are produced.',
+      inputs: 'Documentation, SVG source, branding assets, binary images, and npm dependency metadata.',
+      work: 'Provide setup guidance, reusable pictures/icons, and deterministic dependency installation.',
+      outputs: 'Reference material and assets consumed by people, the browser, or build tools.',
+      next: 'Imports, public URLs, documentation readers, or npm consume the appropriate file.',
+    },
+    guideinternals: {
+      before: 'Know that this guide is itself a small HTML/CSS/JavaScript website generated partly from source files.',
+      outcome: 'Explain how source coverage, notebook cells, navigation, and progress are produced.',
+      model: 'A book press: written lessons provide chapters, while the generator photographs the current source into verified notebook pages.',
+      mistake: 'source-guide-data.js must not embed itself. It is generated output, so the generator deliberately excludes it from its own input.',
+      question: 'What prevents a newly added editable project file from being forgotten?',
+      answer: 'verifyGuideCoverage inventories project text files and throws an error when a file is neither assigned to a module nor explicitly excluded.',
+      inputs: 'Static lesson HTML, guide CSS/JavaScript, module-to-file mapping, and current project source.',
+      work: 'Verify coverage, split exact source into cells, generate metadata, and render interactive learning views.',
+      outputs: 'A self-contained navigable guide whose full-code cells reconstruct the current files.',
+      next: 'npm run guide:generate refreshes the snapshot; guide:check confirms it is current.',
     },
   }
 
@@ -2263,6 +2408,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const nextOverview = document.querySelector('[data-next-overview]')
   const overviewPosition = document.querySelector('[data-overview-position]')
   const moduleSections = [...document.querySelectorAll('.module-section')]
+  if (modulePicker) {
+    modulePicker.replaceChildren()
+    moduleSections.forEach((section, index) => {
+      const title = section.querySelector('.module-heading h2')?.textContent || `Module ${index + 1}`
+      const option = document.createElement('option')
+      option.value = section.id
+      option.textContent = `${index + 1}. ${title}`
+      modulePicker.append(option)
+      const cardNumber = section.querySelector('.card-number')
+      if (cardNumber) cardNumber.textContent = String(index + 1)
+    })
+  }
+  const progressTrack = document.querySelector('.progress-track')
+  progressTrack?.setAttribute('aria-valuemax', String(moduleSections.length))
   const syntaxHandbook = document.getElementById('syntax-handbook')
   const topLevelChildren = [...document.querySelector('main.shell').children]
   const overviewSections = topLevelChildren.filter((element) =>
@@ -2277,7 +2436,7 @@ document.addEventListener('DOMContentLoaded', () => {
     overviewPicker?.append(option)
   })
 
-  const locationKey = 'aqler-guide-location'
+  const locationKey = 'aqler-guide-location-v2'
   let savedLocation = {}
   try {
     savedLocation = JSON.parse(localStorage.getItem(locationKey) || '{}')
@@ -2297,7 +2456,76 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentOverviewIndex = Math.max(0, hashOverviewIndex >= 0 ? hashOverviewIndex : savedOverviewIndex)
   let currentGuideMode = ['overview', 'syntax', 'modules'].includes(savedLocation.mode)
     ? savedLocation.mode
-    : 'modules'
+    : 'overview'
+
+  const navigationHeader = document.createElement('header')
+  navigationHeader.className = 'guide-navigation-header'
+  navigationHeader.innerHTML = `
+    <div>
+      <span class="guide-mark" aria-hidden="true">A</span>
+      <div><strong>AQLER Guide</strong><small>Learn one part at a time</small></div>
+    </div>
+    <button type="button" data-close-guide-navigation aria-label="Close guide navigation">×</button>
+  `
+  courseNavigator?.prepend(navigationHeader)
+
+  const mobileNavigation = document.createElement('div')
+  mobileNavigation.className = 'mobile-guide-navigation'
+  mobileNavigation.innerHTML = `
+    <button type="button" data-open-guide-navigation aria-expanded="false">
+      <span aria-hidden="true">☰</span> Menu
+    </button>
+    <div><small data-mobile-guide-mode>App modules</small><strong data-mobile-guide-location>Choose a lesson</strong></div>
+  `
+  document.querySelector('.hero')?.after(mobileNavigation)
+
+  const navigationOverlay = document.createElement('button')
+  navigationOverlay.type = 'button'
+  navigationOverlay.className = 'guide-navigation-overlay'
+  navigationOverlay.setAttribute('aria-label', 'Close guide navigation')
+  document.body.append(navigationOverlay)
+
+  const openNavigationButton = mobileNavigation.querySelector('[data-open-guide-navigation]')
+  const closeNavigationButton = navigationHeader.querySelector('[data-close-guide-navigation]')
+  const mobileModeLabel = mobileNavigation.querySelector('[data-mobile-guide-mode]')
+  const mobileLocationLabel = mobileNavigation.querySelector('[data-mobile-guide-location]')
+  const mobileNavigationQuery = window.matchMedia('(max-width: 900px)')
+
+  const setNavigationOpen = (open) => {
+    const shouldOpen = mobileNavigationQuery.matches && open
+    document.body.classList.toggle('guide-navigation-open', shouldOpen)
+    openNavigationButton?.setAttribute('aria-expanded', String(shouldOpen))
+    if (courseNavigator) {
+      courseNavigator.setAttribute('aria-hidden', String(mobileNavigationQuery.matches && !shouldOpen))
+      courseNavigator.inert = mobileNavigationQuery.matches && !shouldOpen
+    }
+  }
+
+  const syncNavigationForViewport = () => setNavigationOpen(false)
+  openNavigationButton?.addEventListener('click', () => setNavigationOpen(true))
+  closeNavigationButton?.addEventListener('click', () => setNavigationOpen(false))
+  navigationOverlay.addEventListener('click', () => setNavigationOpen(false))
+  mobileNavigationQuery.addEventListener('change', syncNavigationForViewport)
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setNavigationOpen(false)
+  })
+  syncNavigationForViewport()
+
+  const updateMobileLocation = () => {
+    if (!mobileModeLabel || !mobileLocationLabel) return
+    if (currentGuideMode === 'modules') {
+      mobileModeLabel.textContent = `Module ${currentModuleIndex + 1} of ${moduleSections.length}`
+      mobileLocationLabel.textContent = moduleSections[currentModuleIndex]?.querySelector('.module-heading h2')?.textContent || 'App modules'
+      return
+    }
+    if (currentGuideMode === 'syntax') {
+      mobileModeLabel.textContent = 'Syntax help'
+      mobileLocationLabel.textContent = 'Search methods, hooks, and operators'
+      return
+    }
+    mobileModeLabel.textContent = `Start here · ${currentOverviewIndex + 1} of ${overviewSections.length}`
+    mobileLocationLabel.textContent = overviewSections[currentOverviewIndex]?.querySelector('h2')?.textContent || 'Guide foundations'
+  }
 
   const selectModuleView = (section, view = preferredModuleView) => {
     const target = [...section.querySelectorAll('.module-tab')]
@@ -2347,21 +2575,73 @@ document.addEventListener('DOMContentLoaded', () => {
   overviewEndPrevious.addEventListener('click', () => moveToOverview(currentOverviewIndex - 1))
   overviewEndNext.addEventListener('click', () => moveToOverview(currentOverviewIndex + 1))
 
+  let moduleSearch = null
   if (moduleRail) {
-    moduleSections.forEach((section, index) => {
-      const button = document.createElement('button')
-      const label = modulePicker?.options[index]?.textContent || `Module ${index + 1}`
-      button.type = 'button'
-      button.textContent = String(index + 1)
-      button.title = label
-      button.setAttribute('aria-label', label)
-      button.addEventListener('click', () => moveToModule(index))
-      moduleRail.append(button)
+    moduleSearch = document.createElement('label')
+    moduleSearch.className = 'module-search'
+    moduleSearch.innerHTML = '<span>Find a module</span><input type="search" placeholder="Search logs, shifts, PWA…" data-module-search>'
+    moduleRail.before(moduleSearch)
+
+    const moduleGroups = [
+      ['Getting started', ['startup', 'auth', 'navbar', 'utilities']],
+      ['Daily work', ['timekeeping', 'worklog']],
+      ['Administration', ['adminlogs', 'reminders', 'processor']],
+      ['Scheduling & concerns', ['shifts', 'payroll']],
+      ['Data & design', ['database', 'styling']],
+      ['Install & reference', ['pwa', 'projectfiles', 'guideinternals']],
+    ]
+
+    moduleGroups.forEach(([groupName, moduleIds]) => {
+      const group = document.createElement('section')
+      group.className = 'module-navigation-group'
+      const heading = document.createElement('h3')
+      heading.textContent = groupName
+      group.append(heading)
+
+      moduleIds.forEach((moduleId) => {
+        const index = moduleSections.findIndex((section) => section.id === moduleId)
+        if (index < 0) return
+        const section = moduleSections[index]
+        const title = section.querySelector('.module-heading h2')?.textContent || `Module ${index + 1}`
+        const summary = section.querySelector('.module-heading p')?.textContent || ''
+        const button = document.createElement('button')
+        button.type = 'button'
+        button.dataset.moduleIndex = String(index)
+        button.dataset.searchText = `${title} ${summary}`.toLowerCase()
+        button.innerHTML = `<span>${index + 1}</span><strong>${title}</strong><small>${summary}</small>`
+        button.title = title
+        button.setAttribute('aria-label', `Module ${index + 1}: ${title}`)
+        button.addEventListener('click', () => {
+          moveToModule(index)
+          const searchInput = moduleSearch.querySelector('input')
+          if (searchInput?.value) {
+            searchInput.value = ''
+            searchInput.dispatchEvent(new Event('input'))
+          }
+          setNavigationOpen(false)
+        })
+        group.append(button)
+      })
+      moduleRail.append(group)
+    })
+
+    moduleSearch.querySelector('input')?.addEventListener('input', (event) => {
+      const searchText = event.target.value.trim().toLowerCase()
+      moduleRail.querySelectorAll('.module-navigation-group').forEach((group) => {
+        let visibleCount = 0
+        group.querySelectorAll('button').forEach((button) => {
+          const visible = !searchText || button.dataset.searchText.includes(searchText)
+          button.hidden = !visible
+          if (visible) visibleCount += 1
+        })
+        group.hidden = visibleCount === 0
+      })
     })
   }
 
   updateModuleRail = () => {
-    moduleRail?.querySelectorAll('button').forEach((button, index) => {
+    moduleRail?.querySelectorAll('button[data-module-index]').forEach((button) => {
+      const index = Number(button.dataset.moduleIndex)
       const current = currentGuideMode === 'modules' && index === currentModuleIndex
       button.setAttribute('aria-current', current ? 'step' : 'false')
       button.dataset.understood = String(understood.includes(moduleSections[index]?.id))
@@ -2389,13 +2669,9 @@ document.addEventListener('DOMContentLoaded', () => {
     endNext.disabled = currentModuleIndex === moduleSections.length - 1
     updateModuleRail()
 
-    const currentRailButton = moduleRail?.querySelectorAll('button')[currentModuleIndex]
-    if (moduleRail && currentRailButton && moduleRail.scrollWidth > moduleRail.clientWidth) {
-      const centeredLeft = currentRailButton.offsetLeft
-        - moduleRail.offsetLeft
-        - ((moduleRail.clientWidth - currentRailButton.offsetWidth) / 2)
-      moduleRail.scrollTo({ left: centeredLeft, behavior: 'smooth' })
-    }
+    moduleRail?.querySelector(`button[data-module-index="${currentModuleIndex}"]`)
+      ?.scrollIntoView({ block: 'nearest' })
+    updateMobileLocation()
   }
 
   const renderCurrentOverview = () => {
@@ -2415,13 +2691,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (currentGuideMode === 'overview' && currentSection) {
       currentSection.append(overviewEndNavigation)
     }
+    updateMobileLocation()
   }
 
   const showGuideView = (mode, { scroll = true, updateHash = true, historyMode = 'push' } = {}) => {
     currentGuideMode = mode
+    document.body.classList.remove('guide-view-overview', 'guide-view-syntax', 'guide-view-modules')
+    document.body.classList.add(`guide-view-${mode}`)
     if (syntaxHandbook) syntaxHandbook.hidden = mode !== 'syntax'
     if (moduleNavigator) moduleNavigator.hidden = mode !== 'modules'
     if (moduleRail) moduleRail.hidden = mode !== 'modules'
+    if (moduleSearch) moduleSearch.hidden = mode !== 'modules'
     if (keyboardHint) keyboardHint.hidden = mode !== 'modules'
     if (overviewNavigator) overviewNavigator.hidden = mode !== 'overview'
 
@@ -2431,6 +2711,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderCurrentModule()
     renderCurrentOverview()
+    updateMobileLocation()
 
     try {
       localStorage.setItem(locationKey, JSON.stringify({
@@ -2456,13 +2737,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (scroll) {
-      courseNavigator?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      const target = mode === 'syntax'
+        ? syntaxHandbook
+        : mode === 'modules'
+          ? moduleSections[currentModuleIndex]
+          : overviewSections[currentOverviewIndex]
+      target?.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
   }
 
   guideModeButtons.forEach((button) => {
     button.addEventListener('click', () => {
       showGuideView(button.dataset.guideMode)
+      setNavigationOpen(false)
     })
   })
 
@@ -2528,7 +2815,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const backToTop = document.querySelector('[data-back-to-top]')
   const updateBackToTop = () => {
     backToTop?.classList.toggle('visible', window.scrollY > 650)
-    courseNavigator?.classList.toggle('is-compact', window.scrollY > 360)
   }
   window.addEventListener('scroll', updateBackToTop, { passive: true })
   window.addEventListener('pageshow', updateBackToTop)

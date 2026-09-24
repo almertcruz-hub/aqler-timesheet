@@ -35,6 +35,17 @@ export const CONCERN_CATEGORIES = [
     value: 'leave_issue',
     label: 'Leave concern',
   },
+
+  {
+    value: 'early_time_in',
+    label: 'Early Time In',
+  },
+
+  {
+    value: 'early_time_out',
+    label: 'Early Time Out',
+  },
+
   {
     value: 'absence_issue',
     label: 'Absence issue',
